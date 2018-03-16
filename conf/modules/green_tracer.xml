@@ -1,0 +1,25 @@
+<!DOCTYPE module SYSTEM "module.dtd">
+
+<module name="green_tracer">
+  <doc>
+    <description>
+  Trace the floor of the cyberzoo and when an object blocks the green floor choose a direction which shows the most amount of green
+    </description>
+    <define name="GREEN_TRACER_LUM_MIN" value="0-255" description="Minimum Luminance To select pixel as object"/>
+    <define name="GREEN_TRACER_LUM_MAX" value="0-255" description="Maximum Luminance To select pixel as object"/>
+    <define name="GREEN_TRACER_CR_MIN" value="0-255" description="Minimum CR To select pixel as object"/>
+    <define name="GREEN_TRACER_CR_MAX" value="0-255" description="Maximum CR To select pixel as object"/>
+    <define name="GREEN_TRACER_CB_MIN" value="0-255" description="Minimum CB To select pixel as object"/>
+    <define name="GREEN_TRACER_CB_MAX" value="0-255" description="Maximum CB To select pixel as object"/>
+  </doc>
+  <depends>cv_colorfilter.xml</depends>
+  <header>
+    <file name="green_tracer.h"/>
+  </header>
+  <init fun="green_tracer_init()"/>
+  <periodic fun="green_tracer_periodic()" freq="4"/>
+  <makefile >
+    <file name="green_tracer.c"/>
+  </makefile>
+</module>
+

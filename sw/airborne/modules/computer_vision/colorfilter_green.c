@@ -20,11 +20,11 @@
  */
 
 /**
- * @file modules/computer_vision/colorfilter.c
+ * @file modules/computer_vision/colorfilter_green.c
  */
 
 // Own header
-#include "modules/computer_vision/colorfilter.h"
+#include "modules/computer_vision/colorfilter_green.h"
 #include <stdio.h>
 
 #include "modules/computer_vision/lib/vision/image.h"
