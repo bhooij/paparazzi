@@ -8,7 +8,7 @@ using namespace std;
 int main()
 {
 	// declare the height, width and array
-	int height = 9, width = 45, **number_array = 0;
+	int height = 162, width = 960, **number_array = 0;
 	float **sector_averages = 0;
 	int v_sectors = 3, h_sectors = 15;
 	int sector_height, sector_width;
@@ -41,6 +41,10 @@ int main()
 	array_setup(height, width, number_array);
 	sector_averager (h_sectors, v_sectors, sector_height, sector_width, 
 					number_array, sector_averages);
+
+	printf("%s\n","The calculations are done");
+
+	return 0;
 }
 
 
