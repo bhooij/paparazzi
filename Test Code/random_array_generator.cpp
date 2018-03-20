@@ -4,19 +4,19 @@
 #include <cmath>
 
 using namespace std;
-
 int main()
 {
 	// declare the height, width and array
 	int height = 162, width = 960, **number_array = 0;
-	float **sector_averages = 0;
+	int **sector_averages = 0;
 	int v_sectors = 3, h_sectors = 15;
 	int sector_height, sector_width;
 
 	// declare array setup void function
 	void array_setup(int h, int w, int **array);
 	void sector_averager (int hor_sectors, int vert_sectors, int sector_h, 
-						  int sector_w, int **input_array, float **output_array);
+						  int sector_w, int **input_array, int **output_array);
+    void sector_averager_2 (int image_width, int image_height, int sector_h, int sector_w, int **input_array, int **output_array);
 
 	// determine sector height
 	sector_height = height/v_sectors;
@@ -33,14 +33,14 @@ int main()
 	/* 
 	 * make pointer array which will be filled with the averages of the sectors 
 	 */
-	sector_averages = new float *[sector_height];
+	sector_averages = new int *[sector_height];
 	for(int j = 0; j<v_sectors; j++){
-		sector_averages[j] = new float[h_sectors];
+		sector_averages[j] = new int[h_sectors];
 	}
 
 	array_setup(height, width, number_array);
-	sector_averager (h_sectors, v_sectors, sector_height, sector_width, 
-					number_array, sector_averages);
+	//sector_averager (h_sectors, v_sectors, sector_height, sector_width, number_array, sector_averages);
+	sector_averager_2(width, height, sector_height, sector_width, number_array, sector_averages);
 
 	printf("%s\n","The calculations are done");
 
@@ -81,9 +81,9 @@ void array_setup (int h, int w, int **array)
  * These values are then put in an array/list which can be used for control.
  */
 void sector_averager (int hor_sectors, int vert_sectors, int sector_h, int sector_w, 
-					  int **input_array, float **output_array)
+					  int **input_array, int **output_array)
 {
-	float sum = 0;
+	int sum = 0;
 
 	for(int i = 0; i < vert_sectors; i++){
 		for(int j = 0; j<hor_sectors; j++){
@@ -99,5 +99,32 @@ void sector_averager (int hor_sectors, int vert_sectors, int sector_h, int secto
 		sum = 0;
 
 		};
+	}
+}
+
+/*
+ * This piece of code selectes certain parts of the array and averages the values.
+ * These values are then put in an array/list which can be used for control.
+ */
+void sector_averager_2 (int image_width, int image_height, int sector_h, int sector_w, int **input_array, int **output_array)
+{
+	int sum = 0;
+	int s = 0;
+
+	for(int i = 0; i < image_height; i++){
+		for(int j = s*sector_w ; j < image_width ; j++) {
+			sum += input_array[i][j];
+		    if(j == ((s+1)*sector_w-1)) {
+				break;
+		    }
+		}
+		if((i+1)%sector_h == 0){
+			output_array[(i+1)/sector_h-1][s] = sum/(sector_h*sector_w);
+			sum = 0;
+		}
+		if(i == image_height-1 && s < (image_width/sector_w - 1)) {
+			i = -1;
+			s += 1;
+		}
 	}
 }

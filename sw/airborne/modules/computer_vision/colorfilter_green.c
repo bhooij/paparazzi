@@ -29,6 +29,11 @@
 
 #include "modules/computer_vision/lib/vision/image.h"
 
+#include <cv.h>
+#include <highgui.h>
+
+using namespace cv;
+
 #ifndef COLORFILTER_FPS
 #define COLORFILTER_FPS 0       ///< Default FPS (zero means run at camera fps)
 #endif
@@ -59,15 +64,31 @@ int color_count = 0;
 
 // Function
 struct image_t *colorfilter_func(struct image_t *img);
+//void sector_averager (int hor_sectors, int vert_sectors, int sector_h, int sector_w, int **input_array, float **output_array);
 struct image_t *colorfilter_func(struct image_t *img)
 {
   // Filter
+  uint8_t Width = img.w;
+  uint8_t Height = img.h/3;
+
+  // Change the image.h to the cropped image height.
+  img->h = Height;
+
+  source = (uint8_t)img->buf;
+
+  X = 0;
+  Y = img.h*2/3;
+
+  // Crop the image to the region of interest for the ostacle avoidance.
+  img->buf = source(Rect(X,Y,Width,Height));
+
+  // Determine the color count of the green pixels and change the image to black and white.
+  // location of function: image.c line 151.
   color_count = image_yuv422_colorfilt(img, img,
                                        color_lum_min, color_lum_max,
                                        color_cb_min, color_cb_max,
                                        color_cr_min, color_cr_max
                                       );
-
 
   if (COLORFILTER_SEND_OBSTACLE) {
     if (color_count > 20)
@@ -80,8 +101,32 @@ struct image_t *colorfilter_func(struct image_t *img)
     }
   }
 
-  return img; // Colorfilter did not make a new image
+  return img; // Colorfilter did not make a new image, but it changed the input image.
 }
+
+/*
+void sector_averager (int hor_sectors, int vert_sectors, int sector_h, int sector_w, 
+            int **input_array, float **output_array)
+{
+  float sum = 0;
+
+  for(int i = 0; i < vert_sectors; i++){
+    for(int j = 0; j<hor_sectors; j++){
+      for(int k = 0; k<(sector_h); k++){
+        for(int l = 0; l<(sector_w); l++){
+
+          sum += input_array[k+i*sector_h][l+j*sector_w];
+
+        }
+      }
+
+    output_array[i][j] = sum/(sector_h*sector_w);
+    sum = 0;
+
+    };
+  }
+}
+*/
 
 void colorfilter_init(void)
 {

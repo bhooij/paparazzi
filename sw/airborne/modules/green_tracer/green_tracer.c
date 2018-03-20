@@ -10,7 +10,7 @@
  */
 
 #include "modules/green_tracer/green_tracer.h"
-#include "modules/computer_vision/colorfilter.h"
+#include "modules/computer_vision/colorfilter_green.h"
 #include "firmwares/rotorcraft/navigation.h"
 #include "generated/flight_plan.h"
 #include "generated/airframe.h"
@@ -90,7 +90,7 @@ void green_tracer_periodic()
   float moveDistance = fmin(maxDistance, 0.05 * trajectoryConfidence);
   if (safeToGoForwards) {
     moveWaypointForward(WP_GOAL, moveDistance);
-    moveWaypointForward(WP_TRAJECTORY, 1.25 * moveDistance);
+    moveWaypointForward(WP_TRAJECTORY, 1.00 * moveDistance);
     nav_set_heading_towards_waypoint(WP_GOAL);
     chooseRandomIncrementAvoidance();
     trajectoryConfidence += 1;
@@ -183,10 +183,25 @@ uint8_t chooseRandomIncrementAvoidance()
 }
 
 /*
- * Find a suitable direction in which the trajertory can be continued
-
-uint8_t find_avoidance_increment()
+void sector_averager (int hor_sectors, int vert_sectors, int sector_h, int sector_w, 
+            int **input_array, float **output_array)
 {
+  float sum = 0;
 
+  for(int i = 0; i < vert_sectors; i++){
+    for(int j = 0; j<hor_sectors; j++){
+      for(int k = 0; k<(sector_h); k++){
+        for(int l = 0; l<(sector_w); l++){
+
+          sum += input_array[k+i*sector_h][l+j*sector_w];
+
+        }
+      }
+
+    output_array[i][j] = sum/(sector_h*sector_w);
+    sum = 0;
+
+    };
+  }
 }
 */
