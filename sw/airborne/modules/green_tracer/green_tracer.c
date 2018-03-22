@@ -31,27 +31,27 @@
 #endif
 
 #ifndef GREEN_TRACER_LUM_MIN
-#define GREEN_TRACER_LUM_MIN 41
+#define GREEN_TRACER_LUM_MIN 30
 #endif
 
 #ifndef GREEN_TRACER_LUM_MAX
-#define GREEN_TRACER_LUM_MAX 183
+#define GREEN_TRACER_LUM_MAX 120
 #endif
 
 #ifndef GREEN_TRACER_CB_MIN
-#define GREEN_TRACER_CB_MIN 53
+#define GREEN_TRACER_CB_MIN 0
 #endif
 
 #ifndef GREEN_TRACER_CB_MAX
-#define GREEN_TRACER_CB_MAX 121
+#define GREEN_TRACER_CB_MAX 120
 #endif
 
 #ifndef GREEN_TRACER_CR_MIN
-#define GREEN_TRACER_CR_MIN 134
+#define GREEN_TRACER_CR_MIN 0
 #endif
 
 #ifndef GREEN_TRACER_CR_MAX
-#define GREEN_TRACER_CR_MAX 249
+#define GREEN_TRACER_CR_MAX 127
 #endif
 
 
@@ -60,8 +60,11 @@ int tresholdColorCount          = 0.50 * 124800; // 520 x 240 = 124.800 total pi
 float incrementForAvoidance;
 uint16_t trajectoryConfidence   = 1;
 float maxDistance               = 2.25;
-
-//
+uint8_t **sector_averages       = 0;
+uint8_t v_sectors               = 3
+uint8_t h_sectors               = 15;
+uint8_t binary_threshold        = 130;
+uint8_t sector_height, sector_width;
 
 /*
  * Initialisation function, setting the colour filter, random seed and incrementForAvoidance
@@ -75,6 +78,18 @@ void green_tracer_init()
   color_cb_max  = GREEN_TRACER_CB_MAX;
   color_cr_min  = GREEN_TRACER_CR_MIN;
   color_cr_max  = GREEN_TRACER_CR_MAX;
+
+  sector_height = height/v_sectors;
+  sector_width = width/h_sectors;
+
+  /* 
+   * make pointer array which will be filled with the averages of the sectors 
+   */
+  sector_averages = new int *[v_sectors];
+  for(int j = 0; j<v_sectors; ++j){
+    sector_averages[j] = new int[h_sectors];
+  }
+
   // Initialise random values
   srand(time(NULL));
   chooseRandomIncrementAvoidance();
@@ -85,9 +100,9 @@ void green_tracer_init()
  */
 void green_tracer_periodic()
 {
-  // Check the amount of orange. If this is above a threshold
-  // you want to turn a certain amount of degrees
-  //safeToGoForwards = color_count > tresholdColorCount;
+  /* 
+
+   */
   safeToGoForwards = safeToGoForwards();
   VERBOSE_PRINT("Color_count: %d  threshold: %d safe: %d \n", color_count, tresholdColorCount, safeToGoForwards);
   float moveDistance = fmin(maxDistance, 0.05 * trajectoryConfidence);
@@ -101,9 +116,6 @@ void green_tracer_periodic()
     waypoint_set_here_2d(WP_GOAL);
     waypoint_set_here_2d(WP_TRAJECTORY);
     increase_nav_heading(&nav_heading, incrementForAvoidance);
-    /*
-    find_avoidance_increment();
-    */
     if (trajectoryConfidence > 5) {
       trajectoryConfidence -= 4;
     } else {
@@ -185,19 +197,6 @@ uint8_t chooseRandomIncrementAvoidance()
   return false;
 }
 
-uint8_t safeToGoForwards(void)
-{
-  /* 
-   * make pointer array which will be filled with the averages of the sectors 
-   */
-  sector_averages = new int *[sector_height];
-  for(int j = 0; j<v_sectors; j++){
-    sector_averages[j] = new int[h_sectors];
-  }
-  uint8_t goforwards = false;
-
-return goforwards;
-}
 /*
  * This piece of code selectes certain parts of the array and averages the values.
  * These values are then put in an array/list which can be used for control.
@@ -207,20 +206,19 @@ void CalculateSectorAverages (struct image_t *input_img, int sector_h, int secto
   uint8_t image_width = input_img->w;
   uint8_t image_height = input_img->h;
   uint8_t *source = (uint8_t *)input_img->buf;
-
+  
   int sum = 0;
   int s = 0;
 
-  for(int y = 0; y < input_img->h; y++){
-    for(int x = s*sector_w ; x < input_img->w ; x++) {
-      sum += source[0]//input_array[i][j];
+  for(uint16_t y = 0; y < input_img->h; ++y){
+    for(uint16_t x = s*2*sector_w ; x < input_img->w ; x += 2) {
+      sum += source[1]//input_array[i][j];
         if(j == ((s+1)*sector_w-1)) {
         break;
         }
     }
     if((i+1)%sector_h == 0){
-      
-      if (sum/(sector_h*sector_w) > 130)
+      if (sum/(sector_h*sector_w) > binary_threshold)
       {
         output_array[(i+1)/sector_h-1][s] = 1;
       }
@@ -235,4 +233,14 @@ void CalculateSectorAverages (struct image_t *input_img, int sector_h, int secto
       s += 1;
     }
   }
+  source += 4;
+}
+
+uint8_t safeToGoForwards(void)
+{
+  CalculateSectorAverages(img, sector_height, sector_width, sector_averages);
+
+  uint8_t goforwards = false;
+
+return goforwards;
 }

@@ -172,9 +172,9 @@ uint16_t image_yuv422_colorfilt(struct image_t *input, struct image_t *output, u
       ) {
         cnt ++;
         // UYVY
-        dest[0] =  0; //64;        // U
+        dest[0] =  127; //64;        // U
         dest[1] =  255; //source[1];  // Y
-        dest[2] =  0; //255;        // V
+        dest[2] =  127; //255;        // V
         dest[3] =  255; //source[3];  // Y
         /*
          * With the adaptation the pixels which are considered green will be displayed in white and the other pizels
@@ -184,11 +184,11 @@ uint16_t image_yuv422_colorfilt(struct image_t *input, struct image_t *output, u
         // UYVY
         //char u = source[0] - 127;
         //u /= 4;
-        dest[0] = 0; //127;        // U
+        dest[0] = 127; //127;        // U
         dest[1] = 0;  //source[1];  // Y
         //u = source[2] - 127;
         //u /= 4;
-        dest[2] = 0; //127;        // V
+        dest[2] = 127; //127;        // V
         dest[3] = 0; //source[3];  // Y
       }
 
