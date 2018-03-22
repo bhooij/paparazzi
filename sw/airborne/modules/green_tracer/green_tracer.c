@@ -85,17 +85,10 @@ void green_tracer_init()
  */
 void green_tracer_periodic()
 {
-  /* 
-   * make pointer array which will be filled with the averages of the sectors 
-   */
-  sector_averages = new int *[sector_height];
-  for(int j = 0; j<v_sectors; j++){
-    sector_averages[j] = new int[h_sectors];
-  }
-
   // Check the amount of orange. If this is above a threshold
   // you want to turn a certain amount of degrees
-  safeToGoForwards = color_count > tresholdColorCount;
+  //safeToGoForwards = color_count > tresholdColorCount;
+  safeToGoForwards = safeToGoForwards();
   VERBOSE_PRINT("Color_count: %d  threshold: %d safe: %d \n", color_count, tresholdColorCount, safeToGoForwards);
   float moveDistance = fmin(maxDistance, 0.05 * trajectoryConfidence);
   if (safeToGoForwards) {
@@ -192,6 +185,19 @@ uint8_t chooseRandomIncrementAvoidance()
   return false;
 }
 
+uint8_t safeToGoForwards(void)
+{
+  /* 
+   * make pointer array which will be filled with the averages of the sectors 
+   */
+  sector_averages = new int *[sector_height];
+  for(int j = 0; j<v_sectors; j++){
+    sector_averages[j] = new int[h_sectors];
+  }
+  uint8_t goforwards = false;
+
+return goforwards;
+}
 /*
  * This piece of code selectes certain parts of the array and averages the values.
  * These values are then put in an array/list which can be used for control.
