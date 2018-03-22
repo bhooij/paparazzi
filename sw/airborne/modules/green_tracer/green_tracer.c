@@ -61,6 +61,8 @@ float incrementForAvoidance;
 uint16_t trajectoryConfidence   = 1;
 float maxDistance               = 2.25;
 
+//
+
 /*
  * Initialisation function, setting the colour filter, random seed and incrementForAvoidance
  */
@@ -83,6 +85,14 @@ void green_tracer_init()
  */
 void green_tracer_periodic()
 {
+  /* 
+   * make pointer array which will be filled with the averages of the sectors 
+   */
+  sector_averages = new int *[sector_height];
+  for(int j = 0; j<v_sectors; j++){
+    sector_averages[j] = new int[h_sectors];
+  }
+
   // Check the amount of orange. If this is above a threshold
   // you want to turn a certain amount of degrees
   safeToGoForwards = color_count > tresholdColorCount;
@@ -183,25 +193,40 @@ uint8_t chooseRandomIncrementAvoidance()
 }
 
 /*
-void sector_averager (int hor_sectors, int vert_sectors, int sector_h, int sector_w, 
-            int **input_array, float **output_array)
+ * This piece of code selectes certain parts of the array and averages the values.
+ * These values are then put in an array/list which can be used for control.
+ */
+void CalculateSectorAverages (struct image_t *input_img, int sector_h, int sector_w, int **output_array)
 {
-  float sum = 0;
+  uint8_t image_width = input_img->w;
+  uint8_t image_height = input_img->h;
+  uint8_t *source = (uint8_t *)input_img->buf;
 
-  for(int i = 0; i < vert_sectors; i++){
-    for(int j = 0; j<hor_sectors; j++){
-      for(int k = 0; k<(sector_h); k++){
-        for(int l = 0; l<(sector_w); l++){
+  int sum = 0;
+  int s = 0;
 
-          sum += input_array[k+i*sector_h][l+j*sector_w];
-
+  for(int y = 0; y < input_img->h; y++){
+    for(int x = s*sector_w ; x < input_img->w ; x++) {
+      sum += source[0]//input_array[i][j];
+        if(j == ((s+1)*sector_w-1)) {
+        break;
         }
+    }
+    if((i+1)%sector_h == 0){
+      
+      if (sum/(sector_h*sector_w) > 130)
+      {
+        output_array[(i+1)/sector_h-1][s] = 1;
       }
-
-    output_array[i][j] = sum/(sector_h*sector_w);
-    sum = 0;
-
-    };
+      else{
+        output_array[(i+1)/sector_h-1][s] = 0;
+      }
+      //output_array[(i+1)/sector_h-1][s] = sum/(sector_h*sector_w);
+      sum = 0;
+    }
+    if(i == image_height-1 && s < (image_width/sector_w - 1)) {
+      i = -1;
+      s += 1;
+    }
   }
 }
-*/

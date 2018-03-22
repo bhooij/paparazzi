@@ -64,7 +64,6 @@ int color_count = 0;
 
 // Function
 struct image_t *colorfilter_func(struct image_t *img);
-//void sector_averager (int hor_sectors, int vert_sectors, int sector_h, int sector_w, int **input_array, float **output_array);
 struct image_t *colorfilter_func(struct image_t *img)
 {
   // Filter
@@ -90,6 +89,8 @@ struct image_t *colorfilter_func(struct image_t *img)
                                        color_cr_min, color_cr_max
                                       );
 
+  image_to_grayscale(img, img);
+
   if (COLORFILTER_SEND_OBSTACLE) {
     if (color_count > 20)
     {
@@ -103,30 +104,6 @@ struct image_t *colorfilter_func(struct image_t *img)
 
   return img; // Colorfilter did not make a new image, but it changed the input image.
 }
-
-/*
-void sector_averager (int hor_sectors, int vert_sectors, int sector_h, int sector_w, 
-            int **input_array, float **output_array)
-{
-  float sum = 0;
-
-  for(int i = 0; i < vert_sectors; i++){
-    for(int j = 0; j<hor_sectors; j++){
-      for(int k = 0; k<(sector_h); k++){
-        for(int l = 0; l<(sector_w); l++){
-
-          sum += input_array[k+i*sector_h][l+j*sector_w];
-
-        }
-      }
-
-    output_array[i][j] = sum/(sector_h*sector_w);
-    sum = 0;
-
-    };
-  }
-}
-*/
 
 void colorfilter_init(void)
 {
