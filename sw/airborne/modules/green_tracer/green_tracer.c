@@ -11,6 +11,7 @@
 
 #include "modules/green_tracer/green_tracer.h"
 #include "modules/computer_vision/colorfilter_green.h"
+//#include "modules/computer_vision/cv.h"
 #include "firmwares/rotorcraft/navigation.h"
 #include "generated/flight_plan.h"
 #include "generated/airframe.h"
@@ -55,16 +56,14 @@
 #endif
 
 
+//uint8_t safeToGoForwards        = false;
 uint8_t safeToGoForwards        = false;
 int tresholdColorCount          = 0.50 * 124800; // 520 x 240 = 124.800 total pixels
 float incrementForAvoidance;
 uint16_t trajectoryConfidence   = 1;
 float maxDistance               = 2.25;
-uint8_t **sector_averages       = 0;
-uint8_t v_sectors               = 3
-uint8_t h_sectors               = 15;
-uint8_t binary_threshold        = 130;
-uint8_t sector_height, sector_width;
+//uint8_t (*sector_averages_array)[sector_array_length] = sector_averages;
+//uint8_t **sector_averages = 0;
 
 /*
  * Initialisation function, setting the colour filter, random seed and incrementForAvoidance
@@ -79,17 +78,6 @@ void green_tracer_init()
   color_cr_min  = GREEN_TRACER_CR_MIN;
   color_cr_max  = GREEN_TRACER_CR_MAX;
 
-  sector_height = height/v_sectors;
-  sector_width = width/h_sectors;
-
-  /* 
-   * make pointer array which will be filled with the averages of the sectors 
-   */
-  sector_averages = new int *[v_sectors];
-  for(int j = 0; j<v_sectors; ++j){
-    sector_averages[j] = new int[h_sectors];
-  }
-
   // Initialise random values
   srand(time(NULL));
   chooseRandomIncrementAvoidance();
@@ -100,11 +88,8 @@ void green_tracer_init()
  */
 void green_tracer_periodic()
 {
-  /* 
-
-   */
-  safeToGoForwards = safeToGoForwards();
-  VERBOSE_PRINT("Color_count: %d  threshold: %d safe: %d \n", color_count, tresholdColorCount, safeToGoForwards);
+  safeToGoForwards = color_count < tresholdColorCount;
+  //VERBOSE_PRINT("Color_count: %d  threshold: %d safe: %d \n", color_count, tresholdColorCount, safeToGoForwards);
   float moveDistance = fmin(maxDistance, 0.05 * trajectoryConfidence);
   if (safeToGoForwards) {
     moveWaypointForward(WP_GOAL, moveDistance);
@@ -197,50 +182,52 @@ uint8_t chooseRandomIncrementAvoidance()
   return false;
 }
 
-/*
- * This piece of code selectes certain parts of the array and averages the values.
- * These values are then put in an array/list which can be used for control.
- */
-void CalculateSectorAverages (struct image_t *input_img, int sector_h, int sector_w, int **output_array)
-{
-  uint8_t image_width = input_img->w;
-  uint8_t image_height = input_img->h;
-  uint8_t *source = (uint8_t *)input_img->buf;
+// /*
+//  * This piece of code selectes certain parts of the array and averages the values.
+//  * These values are then put in an array/list which can be used for control.
+//  */
+// void CalculateSectorAverages (struct image_t *input_img, uint8_t sector_h, uint8_t sector_w, uint8_t **output_array)
+// {
+//   uint8_t image_width = input_img->w;
+//   uint8_t image_height = input_img->h;
+//   uint8_t *source = (uint8_t *)input_img->buf;
   
-  int sum = 0;
-  int s = 0;
+//   int sum = 0;
+//   int s = 0;
 
-  for(uint16_t y = 0; y < input_img->h; ++y){
-    for(uint16_t x = s*2*sector_w ; x < input_img->w ; x += 2) {
-      sum += source[1]//input_array[i][j];
-        if(j == ((s+1)*sector_w-1)) {
-        break;
-        }
-    }
-    if((i+1)%sector_h == 0){
-      if (sum/(sector_h*sector_w) > binary_threshold)
-      {
-        output_array[(i+1)/sector_h-1][s] = 1;
-      }
-      else{
-        output_array[(i+1)/sector_h-1][s] = 0;
-      }
-      //output_array[(i+1)/sector_h-1][s] = sum/(sector_h*sector_w);
-      sum = 0;
-    }
-    if(i == image_height-1 && s < (image_width/sector_w - 1)) {
-      i = -1;
-      s += 1;
-    }
-  }
-  source += 4;
-}
+//   for(uint16_t y = 0; y < input_img->h; ++y){
+//     for(uint16_t x = s*2*sector_w ; x < input_img->w ; x += 2) {
+//       sum += source[1];//input_array[i][j];
+//         if(x == ((s+1)*sector_w-1)) {
+//         break;
+//         }
+//     }
+//     if((y+1)%sector_h == 0){
+//       if (sum/(sector_h*sector_w) > binary_threshold)
+//       {
+//         *output_array[y*sector_h+s] = 1;
+//         //output_array[(y+1)/sector_h-1] = 1;
+//       }
+//       else{
+//         *output_array[y*sector_h+s] = 0;
+//         //output_array[(y+1)/sector_h-1] = 0;
+//       }
+//       //output_array[(i+1)/sector_h-1][s] = sum/(sector_h*sector_w);
+//       sum = 0;
+//     }
+//     if(y == image_height-1 && s < (image_width/sector_w - 1)) {
+//       y = -1;
+//       s += 1;
+//     }
+//   }
+//   source += 4;
+// }
 
-uint8_t safeToGoForwards(void)
-{
-  CalculateSectorAverages(img, sector_height, sector_width, sector_averages);
+// uint8_t safeToGoForwards(void)
+// {
+//   CalculateSectorAverages(img, sector_height, sector_width, &sector_averages);
 
-  uint8_t goforwards = false;
+//   uint8_t goforwards = false;
 
-return goforwards;
-}
+// return goforwards;
+// }

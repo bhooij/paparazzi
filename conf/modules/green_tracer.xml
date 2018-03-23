@@ -12,7 +12,7 @@
     <define name="GREEN_TRACER_CB_MIN" value="0-255" description="Minimum CB To select pixel as object"/>
     <define name="GREEN_TRACER_CB_MAX" value="0-255" description="Maximum CB To select pixel as object"/>
   </doc>
-  <depends>cv_colorfilter.xml</depends>
+  <depends>cv_colorfilter_green.xml</depends>
   <header>
     <file name="green_tracer.h"/>
   </header>

@@ -7,7 +7,7 @@ using namespace std;
 int main()
 {
 	// declare the height, width and array
-	int height = 9, width = 45, **number_array = 0;
+	int height = 162, width = 960, **number_array = 0;
 	int **sector_averages = 0;
 	int v_sectors = 3, h_sectors = 15;
 	int sector_height, sector_width;
@@ -46,7 +46,6 @@ int main()
 
 	safe = safeToGoForwards();
 
-	printf("%d\n",sector_averages[2][3]);
 	printf("%s\n","The calculations are done");
 
 	return 0;
@@ -69,13 +68,12 @@ int main()
  */
 void array_setup (int h, int w, int **array)
 {	
-	srand((unsigned)time(NULL));
+	srand((unsigned)time(0));
 
 	for (int i = 0; i<h; ++i){
 		for (int j = 0; j < w; ++j){
 
-			array[i][j] = (i*w)+(j+1);;
-
+			array[i][j] = (rand()%2)*255; //(i*w)+(j+1);
 		}
 	}
 }
@@ -83,7 +81,7 @@ void array_setup (int h, int w, int **array)
 /*
  * This piece of code selectes certain parts of the array and averages the values.
  * These values are then put in an array/list which can be used for control.
- */
+ 
 void sector_averager (int hor_sectors, int vert_sectors, int sector_h, int sector_w, 
 					  int **input_array, int **output_array)
 {
@@ -105,6 +103,7 @@ void sector_averager (int hor_sectors, int vert_sectors, int sector_h, int secto
 		};
 	}
 }
+*/
 
 /*
  * This piece of code selectes certain parts of the array and averages the values.
@@ -114,6 +113,7 @@ void sector_averager_2 (int image_width, int image_height, int sector_h, int sec
 {
 	int sum = 0;
 	int s = 0;
+	int binary_threshold = 130;
 
 	for(int i = 0; i < image_height; ++i){
 		for(int j = s*sector_w ; j < image_width ; ++j) {
@@ -123,7 +123,14 @@ void sector_averager_2 (int image_width, int image_height, int sector_h, int sec
 		    }
 		}
 		if((i+1)%sector_h == 0){
-			output_array[(i+1)/sector_h-1][s] = sum/(sector_h*sector_w);
+			if (sum/(sector_h*sector_w) > binary_threshold)
+      		{
+        		output_array[(i+1)/sector_h-1][s] = 1;
+      		}
+      		else{
+        		output_array[(i+1)/sector_h-1][s] = 0;
+      		}
+			//output_array[(i+1)/sector_h-1][s] = sum/(sector_h*sector_w);
 			sum = 0;
 		}
 		if(i == image_height-1 && s < (image_width/sector_w - 1)) {
@@ -138,6 +145,7 @@ int safeToGoForwards(void)
   /* 
    * make pointer array which will be filled with the averages of the sectors 
    */
+
   int goforwards = true;
 
 return goforwards;

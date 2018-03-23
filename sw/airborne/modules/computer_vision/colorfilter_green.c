@@ -29,10 +29,6 @@
 
 #include "modules/computer_vision/lib/vision/image.h"
 
-#include <cv.h>
-#include <highgui.h>
-
-using namespace cv;
 
 #ifndef COLORFILTER_FPS
 #define COLORFILTER_FPS 0       ///< Default FPS (zero means run at camera fps)
@@ -48,12 +44,18 @@ PRINT_CONFIG_VAR(COLORFILTER_SEND_OBSTACLE)
 struct video_listener *listener = NULL;
 
 // Filter Settings
-uint8_t color_lum_min = 30;//105;
-uint8_t color_lum_max = 120;//205;
+uint8_t color_lum_min = 0;//105;
+uint8_t color_lum_max = 115;//205;
 uint8_t color_cb_min  = 0;//52;
 uint8_t color_cb_max  = 120;//140;
 uint8_t color_cr_min  = 0;//180;
-uint8_t color_cr_max  = 127;//255;
+uint8_t color_cr_max  = 130;//255;
+uint8_t v_sectors               = 20;
+uint8_t h_sectors               = 15;
+uint8_t sector_start            = 10;
+uint8_t binary_threshold        = 130;
+uint8_t sector_height, sector_width;
+//uint8_t *sector_averages;
 
 // Result
 int color_count = 0;
@@ -66,20 +68,15 @@ int color_count = 0;
 struct image_t *colorfilter_func(struct image_t *img);
 struct image_t *colorfilter_func(struct image_t *img)
 {
-  // Filter
-  uint8_t Width = img.w;
-  uint8_t Height = img.h/3;
 
-  // Change the image.h to the cropped image height.
-  img->h = Height;
-
-  source = (uint8_t)img->buf;
-
-  X = 0;
-  Y = img.h*2/3;
-
-  // Crop the image to the region of interest for the ostacle avoidance.
-  img->buf = source(Rect(X,Y,Width,Height));
+  //uint8_t sector_array_length;
+  //sector_array_length = v_sectors*h_sectors;
+  //uint8_t sector_averages[sector_array_length];
+  uint8_t Height = img->h;
+  uint8_t Width = img->w;
+  uint8_t y_start;
+  uint8_t sector_array_length = v_sectors*h_sectors;
+  uint8_t *sector_averages[sector_array_length];
 
   // Determine the color count of the green pixels and change the image to black and white.
   // location of function: image.c line 151.
@@ -89,7 +86,13 @@ struct image_t *colorfilter_func(struct image_t *img)
                                        color_cr_min, color_cr_max
                                       );
 
-  image_to_grayscale(img, img);
+  sector_height = Height/v_sectors;
+  sector_width = Width/h_sectors;
+  y_start = sector_height*sector_start;
+
+  CalculateSectorAverages(img, y_start, sector_height, sector_width, &sector_averages);
+
+  //image_to_grayscale(img, img);
 
   if (COLORFILTER_SEND_OBSTACLE) {
     if (color_count > 20)
@@ -108,4 +111,56 @@ struct image_t *colorfilter_func(struct image_t *img)
 void colorfilter_init(void)
 {
   listener = cv_add_to_device(&COLORFILTER_CAMERA, colorfilter_func, COLORFILTER_FPS);
+
+  /* 
+   * make pointer array which will be filled with the averages of the sectors 
+   */
+  // sector_averages = new int *[v_sectors];
+  // for(int j = 0; j<v_sectors; ++j){
+  //   sector_averages[j] = new int[h_sectors];
+  // }
+  //uint8_t sector_array_length = v_sectors*h_sectors;
+  //uint8_t *sector_averages[sector_array_length];
+  //uint8_t (*sector_averages_array)[sector_array_length] = sector_averages;
+}
+
+/*
+ * This piece of code selectes certain parts of the array and averages the values.
+ * These values are then put in an array/list which can be used for control.
+ */
+void CalculateSectorAverages (struct image_t *input_img, uint8_t y_start ,uint8_t sector_h, uint8_t sector_w, uint8_t *output_array)
+{
+  //uint8_t image_width = input_img->w;
+  //uint8_t image_height = input_img->h;
+  uint8_t *source = (uint8_t *)input_img->buf;
+  
+  int sum = 0;
+  int s = 0;
+
+  for(uint16_t y = y_start; y < input_img->h; ++y){
+    for(uint16_t x = s*2*sector_w ; x < input_img->w ; x += 2) {
+      sum += source[1];//input_array[i][j];
+        if(x == ((s+1)*sector_w-1)) {
+        break;
+        }
+    }
+    if((y+1)%sector_h == 0){
+      if (sum/(sector_h*sector_w) > binary_threshold)
+      {
+        output_array[(y+1)/sector_h-1+s*sector_h] = 1;
+        //output_array[(y+1)/sector_h-1] = 1;
+      }
+      else{
+        output_array[(y+1)/sector_h-1+s*sector_h] = 0;
+        //output_array[(y+1)/sector_h-1] = 0;
+      }
+      //output_array[(i+1)/sector_h-1][s] = sum/(sector_h*sector_w);
+      sum = 0;
+    }
+    if(y == input_img->h-1 && s < (input_img->w/sector_w - 1)) {
+      y = -1;
+      s += 1;
+    }
+  }
+  source += 4;
 }
