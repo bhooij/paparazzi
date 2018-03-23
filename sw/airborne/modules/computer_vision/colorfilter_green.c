@@ -55,10 +55,14 @@ uint8_t h_sectors               = 15;
 uint8_t sector_start            = 10;
 uint8_t binary_threshold        = 130;
 uint8_t sector_height, sector_width;
+uint8_t center;
+uint8_t margin;
+uint8_t win = 5;
 //uint8_t *sector_averages;
 
 // Result
 int color_count = 0;
+uint8_t sector_averages = 0;
 
 #include "subsystems/abi.h"
 
@@ -75,8 +79,10 @@ struct image_t *colorfilter_func(struct image_t *img)
   uint8_t Height = img->h;
   uint8_t Width = img->w;
   uint8_t y_start;
-  uint8_t sector_array_length = v_sectors*h_sectors;
-  uint8_t *sector_averages[sector_array_length];
+  //uint8_t sector_array_length = v_sectors*h_sectors;
+  uint8_t n_col = h_sectors;
+  uint8_t n_rows = v_sectors;
+  uint8_t *sector_averages[n_rows][n_col];//[sector_array_length];
 
   // Determine the color count of the green pixels and change the image to black and white.
   // location of function: image.c line 151.
@@ -90,7 +96,9 @@ struct image_t *colorfilter_func(struct image_t *img)
   sector_width = Width/h_sectors;
   y_start = sector_height*sector_start;
 
-  CalculateSectorAverages(img, y_start, sector_height, sector_width, &sector_averages);
+  CalculateSectorAverages(img, y_start, sector_height, sector_width, sector_averages);
+
+  //Find_Heading(&sector_averages);
 
   //image_to_grayscale(img, img);
 
@@ -147,11 +155,11 @@ void CalculateSectorAverages (struct image_t *input_img, uint8_t y_start ,uint8_
     if((y+1)%sector_h == 0){
       if (sum/(sector_h*sector_w) > binary_threshold)
       {
-        output_array[(y+1)/sector_h-1+s*sector_h] = 1;
+        //output_array[(y+1)/sector_h-1+s*sector_h] = 1;
         //output_array[(y+1)/sector_h-1] = 1;
       }
       else{
-        output_array[(y+1)/sector_h-1+s*sector_h] = 0;
+        //output_array[(y+1)/sector_h-1+s*sector_h] = 0;
         //output_array[(y+1)/sector_h-1] = 0;
       }
       //output_array[(i+1)/sector_h-1][s] = sum/(sector_h*sector_w);
@@ -164,3 +172,99 @@ void CalculateSectorAverages (struct image_t *input_img, uint8_t y_start ,uint8_
   }
   source += 4;
 }
+
+bool safeToGoForwards(int **input_array) 
+{
+  center = (h_sectors+1)/2; 
+  margin  = (win-1)/2;
+  //int front[c]; 
+  int count = 0; 
+  for (int i = center - margin; i < center + margin + 1; i++) {
+    //cout << "i: " << i << endl; 
+    //count += freeColumn(&input_array, i);
+    for(int j = 0; j < v_sectors-sector_start; j++) {
+      count += input_array[j][i];
+    }
+  }
+  //cout << "count: " << count << endl;
+  if (count == win*v_sectors)
+    return true;
+  else
+    return false;
+}
+
+// // check if column is free (green) for array[r][c]
+// bool freeColumn(int *input_array, int idx) {
+//   int count = 0;
+//   uint8_t r;
+//   r = v_sectors - sector_start;
+
+//   for (int i = 0; i < r; i++){
+//     count += input_array[i][idx];
+//   }
+//   // check if column is free
+//   if (count == r)
+//     return true;
+//   else
+//     return false;
+// }
+
+
+// // check if column is free (green) for array[r*c]
+// bool freeColumn_alt(int array[r*c], int idx) {
+//   int count = 0;
+//   for (int i = 0; i < r; i++) {
+//     count += array[i*c + idx];
+//   }
+//   // check if column is free
+//   if (count == r)
+//     return true;
+//   else
+//     return false;
+// }
+
+// // check if safe to go forwards for array[r*c] as input 
+// bool safeToGoForwards_alt(int array[r*c]) {
+//   //int front[c]; 
+//   int count = 0;
+//   for (int i = center - margin; i < center + margin + 1; i++) {
+//     //cout << "i: " << i << endl; 
+//     count += freeColumn_alt(array, i);
+//   }
+//   //cout << "count: " << count << endl;
+//   if (count == win)
+//     return true;
+//   else
+//     return false;
+// }
+
+// void Find_Heading(uint8_t *input_array, int sector_columns, int sector_rows)
+// {
+//   /*
+//   functionality:
+//    - 
+//   */
+// //first part: will determine the full columns
+
+
+// int single_array[sector_columns];
+// int i,j;
+// int count;
+// int x;
+
+// for (j = 0; j < sector_columns; j++){   
+//   count= 0;
+//     for(i = 0; i < n_row; i++){
+//       count = count + input_array[i + j*n_row];
+//     }
+       
+//     if (count == n_row){
+//       single_array[j] = 1;
+//       //printf("3 gehaald");
+
+
+//     } else {
+//       single_array[j] = 0;
+//     }
+// }
+// }
