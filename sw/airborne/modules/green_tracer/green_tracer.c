@@ -11,7 +11,6 @@
 
 #include "modules/green_tracer/green_tracer.h"
 #include "modules/computer_vision/colorfilter_green.h"
-//#include "modules/computer_vision/cv.h"
 #include "firmwares/rotorcraft/navigation.h"
 #include "generated/flight_plan.h"
 #include "generated/airframe.h"
@@ -56,14 +55,11 @@
 #endif
 
 
-//uint8_t safeToGoForwards        = false;
-//uint8_t safeToGoForwards        = false;
-int tresholdColorCount          = 0.50 * 124800; // 520 x 240 = 124.800 total pixels
+uint8_t safe; 
+int tresholdColorCount          = 0.20 * 124800; // 520 x 240 = 124.800 total pixels
 float incrementForAvoidance;
 uint16_t trajectoryConfidence   = 1;
 float maxDistance               = 2.25;
-//uint8_t (*sector_averages_array)[sector_array_length] = sector_averages;
-//uint8_t **sector_averages = 0;
 
 /*
  * Initialisation function, setting the colour filter, random seed and incrementForAvoidance
@@ -88,10 +84,10 @@ void green_tracer_init()
  */
 void green_tracer_periodic()
 {
-  //safeToGoForwards = color_count < tresholdColorCount;
+  safe = safetogo;
   //VERBOSE_PRINT("Color_count: %d  threshold: %d safe: %d \n", color_count, tresholdColorCount, safeToGoForwards);
   float moveDistance = fmin(maxDistance, 0.05 * trajectoryConfidence);
-  if (safeToGoForwards(sector_averages)) {
+  if (safe) {
     moveWaypointForward(WP_GOAL, moveDistance);
     moveWaypointForward(WP_TRAJECTORY, 1.00 * moveDistance);
     nav_set_heading_towards_waypoint(WP_GOAL);
@@ -173,10 +169,10 @@ uint8_t chooseRandomIncrementAvoidance()
   // Randomly choose CW or CCW avoiding direction
   int r = rand() % 2;
   if (r == 0) {
-    incrementForAvoidance = 30.0;
+    incrementForAvoidance = 3;
     VERBOSE_PRINT("Set avoidance increment to: %f\n", incrementForAvoidance);
   } else {
-    incrementForAvoidance = -30.0;
+    incrementForAvoidance = -3;
     VERBOSE_PRINT("Set avoidance increment to: %f\n", incrementForAvoidance);
   }
   return false;

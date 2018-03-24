@@ -51,18 +51,18 @@ uint8_t color_cb_max  = 120;//140;
 uint8_t color_cr_min  = 0;//180;
 uint8_t color_cr_max  = 130;//255;
 uint8_t v_sectors               = 20;
-uint8_t h_sectors               = 15;
-uint8_t sector_start            = 10;
+uint8_t h_sectors               = 15; // Should be an uneven number
+uint8_t sector_start            = 17;
 uint8_t binary_threshold        = 130;
 uint8_t sector_height, sector_width;
 uint8_t center;
 uint8_t margin;
-uint8_t win = 5;
+uint8_t win = 11; // Should be an uneven number <= to h_sectors
 //uint8_t *sector_averages;
 
 // Result
 int color_count = 0;
-uint8_t sector_averages = 0;
+int safetogo = 0;
 
 #include "subsystems/abi.h"
 
@@ -72,17 +72,15 @@ uint8_t sector_averages = 0;
 struct image_t *colorfilter_func(struct image_t *img);
 struct image_t *colorfilter_func(struct image_t *img)
 {
-
-  //uint8_t sector_array_length;
-  //sector_array_length = v_sectors*h_sectors;
-  //uint8_t sector_averages[sector_array_length];
-  uint8_t Height = img->h;
-  uint8_t Width = img->w;
-  uint8_t y_start;
-  //uint8_t sector_array_length = v_sectors*h_sectors;
-  uint8_t n_col = h_sectors;
-  uint8_t n_rows = v_sectors;
-  uint8_t *sector_averages[n_rows][n_col];//[sector_array_length];
+  uint16_t Height = img->h;
+  uint16_t Width = img->w;
+  uint16_t y_start;
+  
+  uint16_t *sector_averages[v_sectors];
+  for (int i = 0; i < v_sectors; i++)
+  {
+  	sector_averages[i] = (uint16_t *)malloc(h_sectors * sizeof(uint16_t));
+  }
 
   // Determine the color count of the green pixels and change the image to black and white.
   // location of function: image.c line 151.
@@ -97,8 +95,9 @@ struct image_t *colorfilter_func(struct image_t *img)
   y_start = sector_height*sector_start;
 
   CalculateSectorAverages(img, y_start, sector_height, sector_width, sector_averages);
+  //printf("%d\n",sector_averages[0][0]);
 
-  //Find_Heading(&sector_averages);
+  safetogo = safeToGoForwards(sector_averages);
 
   //image_to_grayscale(img, img);
 
@@ -120,30 +119,18 @@ void colorfilter_init(void)
 {
   listener = cv_add_to_device(&COLORFILTER_CAMERA, colorfilter_func, COLORFILTER_FPS);
 
-  /* 
-   * make pointer array which will be filled with the averages of the sectors 
-   */
-  // sector_averages = new int *[v_sectors];
-  // for(int j = 0; j<v_sectors; ++j){
-  //   sector_averages[j] = new int[h_sectors];
-  // }
-  //uint8_t sector_array_length = v_sectors*h_sectors;
-  //uint8_t *sector_averages[sector_array_length];
-  //uint8_t (*sector_averages_array)[sector_array_length] = sector_averages;
 }
 
 /*
  * This piece of code selectes certain parts of the array and averages the values.
  * These values are then put in an array/list which can be used for control.
  */
-void CalculateSectorAverages (struct image_t *input_img, uint8_t y_start ,uint8_t sector_h, uint8_t sector_w, uint8_t *output_array)
+void CalculateSectorAverages (struct image_t *input_img, uint16_t y_start ,uint8_t sector_h, uint8_t sector_w, uint16_t **output_array)
 {
-  //uint8_t image_width = input_img->w;
-  //uint8_t image_height = input_img->h;
   uint8_t *source = (uint8_t *)input_img->buf;
   
-  int sum = 0;
-  int s = 0;
+  uint16_t sum = 0;
+  uint8_t s = 0;
 
   for(uint16_t y = y_start; y < input_img->h; ++y){
     for(uint16_t x = s*2*sector_w ; x < input_img->w ; x += 2) {
@@ -156,13 +143,12 @@ void CalculateSectorAverages (struct image_t *input_img, uint8_t y_start ,uint8_
       if (sum/(sector_h*sector_w) > binary_threshold)
       {
         //output_array[(y+1)/sector_h-1+s*sector_h] = 1;
-        //output_array[(y+1)/sector_h-1] = 1;
+        output_array[(y+1)/sector_h-1][s] = 1;
       }
       else{
         //output_array[(y+1)/sector_h-1+s*sector_h] = 0;
-        //output_array[(y+1)/sector_h-1] = 0;
+        output_array[(y+1)/sector_h-1][s] = 0;
       }
-      //output_array[(i+1)/sector_h-1][s] = sum/(sector_h*sector_w);
       sum = 0;
     }
     if(y == input_img->h-1 && s < (input_img->w/sector_w - 1)) {
@@ -173,7 +159,7 @@ void CalculateSectorAverages (struct image_t *input_img, uint8_t y_start ,uint8_
   source += 4;
 }
 
-bool safeToGoForwards(int **input_array) 
+bool safeToGoForwards(uint16_t **input_array) 
 {
   center = (h_sectors+1)/2; 
   margin  = (win-1)/2;
@@ -187,10 +173,10 @@ bool safeToGoForwards(int **input_array)
     }
   }
   //cout << "count: " << count << endl;
-  if (count == win*v_sectors)
-    return true;
-  else
+  if (count == 0)
     return false;
+  else
+    return true;
 }
 
 // // check if column is free (green) for array[r][c]

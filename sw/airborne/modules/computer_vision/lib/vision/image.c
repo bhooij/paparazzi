@@ -27,7 +27,7 @@
 #include "image.h"
 #include <stdlib.h>
 #include <string.h>
-
+#include <stdio.h>
 /**
  * Create a new image
  * @param[out] *img The output image

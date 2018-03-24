@@ -1,6 +1,6 @@
 <!DOCTYPE airframe SYSTEM "../airframe.dtd">
 
-<airframe name="bebop_avoider">
+<airframe name="bebop_tracer">
   <description>Vision Course TUDelft V2018
   </description>
 
