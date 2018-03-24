@@ -52,7 +52,7 @@ uint8_t color_cr_min  = 0;//180;
 uint8_t color_cr_max  = 130;//255;
 uint8_t v_sectors               = 20;
 uint8_t h_sectors               = 15; // Should be an uneven number
-uint8_t sector_start            = 17;
+uint8_t sector_start            = 12; // Should be <= than h_sectors
 uint8_t binary_threshold        = 130;
 uint8_t sector_height, sector_width;
 uint8_t center;
