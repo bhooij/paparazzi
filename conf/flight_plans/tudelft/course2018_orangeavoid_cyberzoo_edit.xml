@@ -116,7 +116,7 @@
     </block>
     <block name="circlehome" pre_call="nav_set_heading_towards_waypoint(WP_HOME)">
       <circle radius="2" wp="HOME"/>
-      <!--<exception cond="!InsideObstacleZone(WaypointX(WP_TRAJECTORY),WaypointY(WP_TRAJECTORY))" deroute="PrepareObstacleRun"/>-->
+      <exception cond="!InsideObstacleZone(WaypointX(WP_TRAJECTORY),WaypointY(WP_TRAJECTORY))" deroute="PrepareObstacleRun"/>
     </block>
     <block name="W1">
       <go wp="W1" approaching_time="0"/>
@@ -151,23 +151,6 @@
       <go wp="W4" approaching_time="0"/>
       <deroute block="1"/>
     </block>
-    <block name="loop">
-    <while cond="TRUE">
-      <!-- <call_once fun="nav_set_heading_towards_waypoint(WP_W1)"/> -->
-      <go wp="W1" />
-      <!-- <call_once fun="nav_set_heading_towards_waypoint(WP_W2)"/> -->
-      <while cond="2 > stage_time"/>
-      <go wp="W2" />
-      <!-- <call_once fun="nav_set_heading_towards_waypoint(WP_W3)"/> -->
-      <while cond="2 > stage_time"/> 
-      <go wp="W3" />
-      <!-- <call_once fun="nav_set_heading_towards_waypoint(WP_W4)"/> -->
-      <while cond="2 > stage_time"/>
-      <go wp="W4" />
-      <!-- <call_once fun="nav_set_heading_towards_waypoint(WP_W1)"/> -->
-      <while cond="2 > stage_time"/>
-    </while>
- </block>
     <block name="PrepareObstacleRun">
       <while cond="!InsideObstacleZone(WaypointX(WP_TRAJECTORY),WaypointY(WP_TRAJECTORY))">
         <call_once fun="increase_nav_heading(&nav_heading, 5)"/>

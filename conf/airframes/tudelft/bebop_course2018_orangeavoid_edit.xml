@@ -115,13 +115,22 @@
   </command_laws>
 
   <!-- Cyberzoo bebop1 values -->
-  <section name="COLORFILTER" prefix="ORANGE_AVOIDER_">
+<!--   <section name="COLORFILTER" prefix="ORANGE_AVOIDER_">
     <define name="LUM_MIN" value="20"/>
     <define name="LUM_MAX" value="180"/>
     <define name="CB_MIN" value="75"/>
     <define name="CB_MAX" value="145"/>
     <define name="CR_MIN" value="167"/>
     <define name="CR_MAX" value="255"/>
+  </section>
+ -->
+  <section name="COLORFILTER" prefix="ORANGE_AVOIDER_">
+    <define name="LUM_MIN" value="0"/>
+    <define name="LUM_MAX" value="115"/>
+    <define name="CB_MIN" value="0"/>
+    <define name="CB_MAX" value="120"/>
+    <define name="CR_MIN" value="0"/>
+    <define name="CR_MAX" value="130"/>
   </section>
 
   <section name="AIR_DATA" prefix="AIR_DATA_">
