@@ -51,8 +51,8 @@ uint8_t color_cb_max  = 120;//140;
 uint8_t color_cr_min  = 0;//180;
 uint8_t color_cr_max  = 130;//255;
 uint8_t v_sectors               = 15; // The amount of vertical sectors of the complete image.
-uint8_t h_sectors               = 15; // Should be an uneven number
-uint8_t sector_end              = 3; // The start of the control sector in the image. Should be <= h_sectors
+uint8_t h_sectors               = 16; // Should be an uneven number
+uint8_t sector_end              = 6; // The start of the control sector in the image. Should be <= h_sectors
 uint8_t binary_threshold        = 130;
 uint8_t sector_height, sector_width;
 uint8_t center;
@@ -60,6 +60,7 @@ uint8_t margin;
 uint8_t win = 11; // Should be an uneven number <= to h_sectors
 
 // Result
+int heading_increment = 0;
 int color_count = 0;
 int safetogo = 0;
 
@@ -103,15 +104,15 @@ struct image_t *colorfilter_func(struct image_t *img)
 */
 
   CalculateSectorAverages(img, x_end, sector_height, sector_width, sector_averages);
-  
 /*
   printf("%d",sector_averages[0][0]); printf("%d",sector_averages[0][1]); printf("%d\n",sector_averages[0][2]);
   printf("%d",sector_averages[1][0]); printf("%d",sector_averages[1][1]); printf("%d\n",sector_averages[1][2]);
   printf("%d",sector_averages[2][0]); printf("%d",sector_averages[2][1]); printf("%d\n",sector_averages[2][2]);
 */
-
   safetogo = safeToGoForwards(sector_averages);
-  printf("safetogo: %d\n",safetogo);
+  //printf("safetogo: %d\n",safetogo);
+
+  heading_increment = heading(sector_averages);
   //free(sector_averages);
 
   //image_to_grayscale(img, img);
@@ -192,90 +193,58 @@ bool safeToGoForwards(uint8_t **input_array)
   int count = 0; 
   for (int i = center - margin; i < center + margin + 1; i++) {
     //cout << "i: " << i << endl; 
-    //count += freeColumn(&input_array, i);
-    for(int j = 0; j < sector_end; j++) {
-      count += input_array[i][j];
-    }
+    count += freeColumn(input_array, i);
+    //for(int j = 0; j < sector_end; j++) {
+    //  count += input_array[i][j];
+    //}
   }
   //cout << "count: " << count << endl;
-  if (count < 33)
+  if (count < 10)
     return false;
   else
     return true;
 }
 
-// // check if column is free (green) for array[r][c]
-// bool freeColumn(int *input_array, int idx) {
-//   int count = 0;
-//   uint8_t r;
-//   r = v_sectors - sector_start;
+// check if column is free (green) for array[r][c]
+bool freeColumn(uint8_t **input_array, int idx) {
+  uint8_t count = 0;
 
-//   for (int i = 0; i < r; i++){
-//     count += input_array[i][idx];
-//   }
-//   // check if column is free
-//   if (count == r)
-//     return true;
-//   else
-//     return false;
-// }
+  for (int i = 0; i < sector_end; i++){
+    count += input_array[idx][i];
+  }
+  // check if column is free
+  if (count == sector_end)
+    return true;
+  else
+    return false;
+}
 
+// check for largest free space: left of right
+uint8_t largestColumn(uint8_t **input_array) {
+  int count = 0;
+  int idx = 0; 
+  int maxCount = 0; 
+  for (int i = 0; i < v_sectors; i++) {
+    //cout << "i: " << i << " | ";
+    if (freeColumn(input_array, i) == 0) { 
+      if (count > maxCount) {
+        maxCount = count; 
+        idx = i - maxCount/2 - maxCount % 2;  
+      }
+      count = 0; 
+    }
+    else
+      count += 1; 
+  }
+  return idx;   
+}
 
-// // check if column is free (green) for array[r*c]
-// bool freeColumn_alt(int array[r*c], int idx) {
-//   int count = 0;
-//   for (int i = 0; i < r; i++) {
-//     count += array[i*c + idx];
-//   }
-//   // check if column is free
-//   if (count == r)
-//     return true;
-//   else
-//     return false;
-// }
-
-// // check if safe to go forwards for array[r*c] as input 
-// bool safeToGoForwards_alt(int array[r*c]) {
-//   //int front[c]; 
-//   int count = 0;
-//   for (int i = center - margin; i < center + margin + 1; i++) {
-//     //cout << "i: " << i << endl; 
-//     count += freeColumn_alt(array, i);
-//   }
-//   //cout << "count: " << count << endl;
-//   if (count == win)
-//     return true;
-//   else
-//     return false;
-// }
-
-// void Find_Heading(uint8_t *input_array, int sector_columns, int sector_rows)
-// {
-//   /*
-//   functionality:
-//    - 
-//   */
-// //first part: will determine the full columns
-
-
-// int single_array[sector_columns];
-// int i,j;
-// int count;
-// int x;
-
-// for (j = 0; j < sector_columns; j++){   
-//   count= 0;
-//     for(i = 0; i < n_row; i++){
-//       count = count + input_array[i + j*n_row];
-//     }
-       
-//     if (count == n_row){
-//       single_array[j] = 1;
-//       //printf("3 gehaald");
-
-
-//     } else {
-//       single_array[j] = 0;
-//     }
-// }
-// }
+// decide to turn left of right or do nothing
+uint8_t heading(uint8_t **input_array) {
+  if (largestColumn(input_array) > v_sectors/2)
+    // right
+    return -5;
+  else //(largestColumn(input_array) < v_sectors/2)
+    //left 
+    return 5; 
+}

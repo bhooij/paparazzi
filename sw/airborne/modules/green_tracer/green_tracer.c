@@ -58,7 +58,7 @@
 uint8_t safe; 
 int tresholdColorCount          = 0.20 * 124800; // 520 x 240 = 124.800 total pixels
 float incrementForAvoidance;
-uint16_t trajectoryConfidence   = 1;
+float trajectoryConfidence   = 3.0;
 float maxDistance               = 2.25;
 
 /*
@@ -89,16 +89,17 @@ void green_tracer_periodic()
   float moveDistance = fmin(maxDistance, 0.05 * trajectoryConfidence);
   if (safe) {
     moveWaypointForward(WP_GOAL, moveDistance);
-    moveWaypointForward(WP_TRAJECTORY, 1.4 * moveDistance);
+    moveWaypointForward(WP_TRAJECTORY, 1.2 * moveDistance);
     nav_set_heading_towards_waypoint(WP_GOAL);
-    chooseRandomIncrementAvoidance();
-    trajectoryConfidence += 1;
+    //chooseRandomIncrementAvoidance();
+    trajectoryConfidence += 0.1;
   } else {
+    printf("AAAAAAAAHHHHHH!!!!!!\n");
     waypoint_set_here_2d(WP_GOAL);
     waypoint_set_here_2d(WP_TRAJECTORY);
-    increase_nav_heading(&nav_heading, incrementForAvoidance);
+    increase_nav_heading(&nav_heading, heading_increment);
     if (trajectoryConfidence > 5) {
-      trajectoryConfidence -= 4;
+      trajectoryConfidence = 1;
     } else {
       trajectoryConfidence = 1;
     }

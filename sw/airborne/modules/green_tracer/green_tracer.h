@@ -18,7 +18,7 @@
 
 extern uint8_t safetogoforwards;
 extern float incrementForAvoidance;
-extern uint16_t trajectoryConfidence;
+extern float trajectoryConfidence;
 //extern uint8_t safeToGoForwards(void);
 extern void green_tracer_init(void);
 extern void green_tracer_periodic(void);
