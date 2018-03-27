@@ -89,7 +89,7 @@ void green_tracer_periodic()
   float moveDistance = fmin(maxDistance, 0.05 * trajectoryConfidence);
   if (safe) {
     moveWaypointForward(WP_GOAL, moveDistance);
-    moveWaypointForward(WP_TRAJECTORY, 1.00 * moveDistance);
+    moveWaypointForward(WP_TRAJECTORY, 1.4 * moveDistance);
     nav_set_heading_towards_waypoint(WP_GOAL);
     chooseRandomIncrementAvoidance();
     trajectoryConfidence += 1;
@@ -169,10 +169,10 @@ uint8_t chooseRandomIncrementAvoidance()
   // Randomly choose CW or CCW avoiding direction
   int r = rand() % 2;
   if (r == 0) {
-    incrementForAvoidance = 3;
+    incrementForAvoidance = 10;
     VERBOSE_PRINT("Set avoidance increment to: %f\n", incrementForAvoidance);
   } else {
-    incrementForAvoidance = -3;
+    incrementForAvoidance = -10;
     VERBOSE_PRINT("Set avoidance increment to: %f\n", incrementForAvoidance);
   }
   return false;

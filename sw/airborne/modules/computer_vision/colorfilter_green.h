@@ -31,8 +31,8 @@
 
 // Module functions
 extern void colorfilter_init(void);
-extern void CalculateSectorAverages (struct image_t *input_img,uint16_t y_start, uint8_t sector_h, uint8_t sector_w, uint16_t **output_array);
-extern bool safeToGoForwards(uint16_t **input_array);
+extern void CalculateSectorAverages (struct image_t *input_img,uint16_t x_end, uint8_t sector_h, uint8_t sector_w, uint8_t **output_array);
+extern bool safeToGoForwards(uint8_t **input_array);
 //extern bool freeColumn(int *input_array, int idx);
 
 extern uint8_t color_lum_min;
