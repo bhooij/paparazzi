@@ -17,7 +17,7 @@
     <file name="green_tracer.h"/>
   </header>
   <init fun="green_tracer_init()"/>
-  <periodic fun="green_tracer_periodic()" freq="8"/>
+  <periodic fun="green_tracer_periodic()" freq="4"/>
   <makefile >
     <file name="green_tracer.c"/>
   </makefile>

@@ -52,7 +52,7 @@ uint8_t color_cr_min  = 0;//180;
 uint8_t color_cr_max  = 130;//255;
 uint8_t v_sectors               = 15; // The amount of vertical sectors of the complete image.
 uint8_t h_sectors               = 16; // Should be an uneven number
-uint8_t sector_end              = 6; // The start of the control sector in the image. Should be <= h_sectors
+uint8_t sector_end              = 15; // The start of the control sector in the image. Should be <= h_sectors
 uint8_t binary_threshold        = 130;
 uint8_t sector_height, sector_width;
 uint8_t center;
@@ -72,9 +72,6 @@ int safetogo = 0;
 struct image_t *colorfilter_func(struct image_t *img);
 struct image_t *colorfilter_func(struct image_t *img)
 {
-  //uint16_t Height = img->h;
-  //uint16_t Width = img->w;
-  //printf("FOO\n");
   uint16_t x_end;
   
   uint8_t *sector_averages[v_sectors];
@@ -109,6 +106,15 @@ struct image_t *colorfilter_func(struct image_t *img)
   printf("%d",sector_averages[1][0]); printf("%d",sector_averages[1][1]); printf("%d\n",sector_averages[1][2]);
   printf("%d",sector_averages[2][0]); printf("%d",sector_averages[2][1]); printf("%d\n",sector_averages[2][2]);
 */
+
+  for(int l = 0; l < sector_end; ++l){
+    for(int k = 0; k < v_sectors; ++k){
+      printf("%d ", sector_averages[k][l]);
+    }
+    printf("\n");
+  }
+  printf("\n");
+
   safetogo = safeToGoForwards(sector_averages);
   //printf("safetogo: %d\n",safetogo);
 
@@ -152,11 +158,12 @@ void CalculateSectorAverages (struct image_t *input_img, uint16_t x_end ,uint8_t
     //printf("%d\n",y);
     for(uint16_t x = s*sector_w ; x < x_end ; x += 1) {
       sum += source[1];//input_array[i][j];
-      //printf("source[1]: %d, y: %d, x: %d\n",source[1],y,x);
       //sum += source[3];
+      //printf("source[1]: %d, y: %d, x: %d\n",source[1],y,x);
         if(x == ((s+1)*sector_w-1)) {
         break;
         }
+      source += 2;
     }
     if((y+1)%sector_h == 0){
       //printf("sum: %d\n",sum);
@@ -179,8 +186,9 @@ void CalculateSectorAverages (struct image_t *input_img, uint16_t x_end ,uint8_t
       y = -1;
       s += 1;
     }
+   
   }
-  source += 2;
+  
 
 //printf("The picture is processed for averages\n");
 }
