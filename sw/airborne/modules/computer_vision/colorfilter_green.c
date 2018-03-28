@@ -50,14 +50,14 @@ uint8_t color_cb_min  = 0;//52;
 uint8_t color_cb_max  = 120;//140;
 uint8_t color_cr_min  = 0;//180;
 uint8_t color_cr_max  = 130;//255;
-uint8_t v_sectors               = 15; // The amount of vertical sectors of the complete image.
-uint8_t h_sectors               = 16; // Should be an uneven number
-uint8_t sector_end              = 15; // The start of the control sector in the image. Should be <= h_sectors
-uint8_t binary_threshold        = 130;
-uint8_t sector_height, sector_width;
+uint8_t v_sectors               = 13; //
+uint8_t h_sectors               = 16;  // 
+uint8_t sector_end              = 6;  //
+uint16_t binary_threshold       = 130;
+uint16_t sector_height, sector_width;
 uint8_t center;
 uint8_t margin;
-uint8_t win = 11; // Should be an uneven number <= to h_sectors
+uint8_t win = 11; // Should be an uneven number <= to v_sectors
 
 // Result
 int heading_increment = 0;
@@ -92,36 +92,11 @@ struct image_t *colorfilter_func(struct image_t *img)
   sector_width = img->w/h_sectors;
   x_end = sector_width*sector_end;
 
-/*  
-  printf("img->w: %d\n",img->w);
-  printf("img->h: %d\n",img->h);
-  printf("x_end: %d\n",x_end);
-  printf("sector_height: %d\n",sector_height);
-  printf("sector_width: %d\n",sector_width);
-*/
-
   CalculateSectorAverages(img, x_end, sector_height, sector_width, sector_averages);
-/*
-  printf("%d",sector_averages[0][0]); printf("%d",sector_averages[0][1]); printf("%d\n",sector_averages[0][2]);
-  printf("%d",sector_averages[1][0]); printf("%d",sector_averages[1][1]); printf("%d\n",sector_averages[1][2]);
-  printf("%d",sector_averages[2][0]); printf("%d",sector_averages[2][1]); printf("%d\n",sector_averages[2][2]);
-*/
-
-  for(int l = 0; l < sector_end; ++l){
-    for(int k = 0; k < v_sectors; ++k){
-      printf("%d ", sector_averages[k][l]);
-    }
-    printf("\n");
-  }
-  printf("\n");
 
   safetogo = safeToGoForwards(sector_averages);
-  //printf("safetogo: %d\n",safetogo);
 
   heading_increment = heading(sector_averages);
-  //free(sector_averages);
-
-  //image_to_grayscale(img, img);
 
   if (COLORFILTER_SEND_OBSTACLE) {
     if (color_count > 20)
@@ -133,41 +108,72 @@ struct image_t *colorfilter_func(struct image_t *img)
       AbiSendMsgOBSTACLE_DETECTION(OBS_DETECTION_COLOR_ID, 10.f, 0.f, 0.f);
     }
   }
-  //printf("BLA\n");
   return img; // Colorfilter did not make a new image, but it changed the input image.
 }
 
 void colorfilter_init(void)
 {
   listener = cv_add_to_device(&COLORFILTER_CAMERA, colorfilter_func, COLORFILTER_FPS);
+}
 
+void CalculateSectorAverages (struct image_t *input_img, uint16_t x_end, uint8_t sector_h, uint8_t sector_w, uint8_t **output_array) {
+  uint8_t *source = (uint8_t *)input_img->buf;
+  int sum = 0;
+  int s = 0;
+
+  for(int y = 0; y < input_img->h; ++y){
+    for(int x = s*sector_w*2; x <x_end*2; x+=2) {
+      sum += source[y*input_img->w*2+x+1];
+      if(x+2 == (s+1)*sector_w*2) {
+        break;
+      }
+    }
+    if((y+1)%sector_h == 0) {
+      if (sum/(sector_h*sector_w) > binary_threshold) {
+        output_array[(y+1)/sector_h-1][s] = 1;
+      }
+      else {
+        output_array[(y+1)/sector_h-1][s] = 0;
+      }
+      sum = 0;
+    }
+    if(y == input_img->h-1 && s < (x_end/sector_w) - 1) {
+      y = -1;
+      ++s;
+    }
+  }
 }
 
 /*
  * This piece of code selectes certain parts of the array and averages the values.
  * These values are then put in an array/list which can be used for control.
  */
+/*
 void CalculateSectorAverages (struct image_t *input_img, uint16_t x_end ,uint8_t sector_h, uint8_t sector_w, uint8_t **output_array)
 {
   uint8_t *source = (uint8_t *)input_img->buf;
   
-  int sum = 0;
+  uint32_t sum = 0;
   uint8_t s = 0;
 
   for(uint16_t y = 0; y < input_img->h; ++y){
     //printf("%d\n",y);
-    for(uint16_t x = s*sector_w ; x < x_end ; x += 1) {
-      sum += source[1];//input_array[i][j];
-      //sum += source[3];
+    for(uint16_t x = s*sector_w ; x < x_end ; ++x) {
+      sum += source[1];
+
+      printf("%d",source[1]); printf(" "); printf("x: %d",x); printf(" ");
+      source += 2; // go the the next pixel
+
       //printf("source[1]: %d, y: %d, x: %d\n",source[1],y,x);
-        if(x == ((s+1)*sector_w-1)) {
+      if(x == ((s+1)*sector_w-1)) {
+        source += (input_img->w-sector_w+1)*2;
         break;
-        }
-      source += 2;
+      }
     }
+    printf("\n");
     if((y+1)%sector_h == 0){
-      //printf("sum: %d\n",sum);
-      //printf("average: %d\n",sum/(sector_h*sector_w));
+      printf("sum: %d\n",sum);
+      printf("average: %d\n",sum/(sector_h*sector_w));
       //printf("sector area: %d\n",sector_h*sector_w);
       if (sum/(sector_h*sector_w) > binary_threshold)
       {
@@ -185,14 +191,12 @@ void CalculateSectorAverages (struct image_t *input_img, uint16_t x_end ,uint8_t
       //printf("s: %d\n",s);
       y = -1;
       s += 1;
+      source -= (input_img->h*input_img->w)*2; // go back to the beginning of the image.
     }
-   
   }
-  
-
-//printf("The picture is processed for averages\n");
+printf("The picture is processed for averages\n");
 }
-
+*/
 bool safeToGoForwards(uint8_t **input_array) 
 {
   center = (v_sectors+1)/2; 
@@ -251,8 +255,8 @@ uint8_t largestColumn(uint8_t **input_array) {
 uint8_t heading(uint8_t **input_array) {
   if (largestColumn(input_array) > v_sectors/2)
     // right
-    return -5;
+    return -10;
   else //(largestColumn(input_array) < v_sectors/2)
     //left 
-    return 5; 
+    return 10; 
 }
