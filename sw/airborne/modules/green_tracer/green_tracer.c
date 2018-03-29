@@ -59,7 +59,7 @@ uint8_t safe;
 int tresholdColorCount          = 0.20 * 124800; // 520 x 240 = 124.800 total pixels
 float incrementForAvoidance;
 float trajectoryConfidence   = 3.0;
-float maxDistance               = 1.5;//2.25;
+float maxDistance               = 1.0;//2.25;
 uint8_t new_heading;
 
 /*
@@ -77,7 +77,7 @@ void green_tracer_init()
 
   // Initialise random values
   srand(time(NULL));
-  chooseRandomIncrementAvoidance();
+  //chooseRandomIncrementAvoidance();
 }
 
 /*
@@ -96,6 +96,7 @@ void green_tracer_periodic()
     //chooseRandomIncrementAvoidance();
     trajectoryConfidence += 1;
   } else {
+    printf("Not safe!");
     waypoint_set_here_2d(WP_GOAL);
     waypoint_set_here_2d(WP_TRAJECTORY);
     increase_nav_heading(&nav_heading, new_heading);

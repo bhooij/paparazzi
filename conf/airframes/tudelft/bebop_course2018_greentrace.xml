@@ -12,8 +12,8 @@
     </target>
 
     <!-- Front Camera parameters -->
-    <define name="MT9F002_INITIAL_OFFSET_X" value="0.09" /> <!-- Offset from center position [-0.5..0.5]. Set to 0.09 to center horizon. -->
-    <define name="MT9F002_INITIAL_OFFSET_Y" value="0." /> <!-- Offset from center position [-0.5..0.5] -->
+    <define name="MT9F002_INITIAL_OFFSET_X" value="0.04" /> <!-- Offset from center position [-0.5..0.5]. Set to 0.09 to center horizon. -->
+    <define name="MT9F002_INITIAL_OFFSET_Y" value="0.00" /> <!-- Offset from center position [-0.5..0.5] -->
     <define name="MT9F002_OUTPUT_WIDTH" value="240" /> <!-- Output dimensions -->
     <define name="MT9F002_OUTPUT_HEIGHT" value="520" /> <!-- Output dimensions -->
     <define name="MT9F002_TARGET_FPS" value="30" />
@@ -105,11 +105,11 @@
   <!-- Cyberzoo bebop1 values -->
   <section name="COLORFILTER" prefix="GREEN_TRACER_">
     <define name="LUM_MIN" value="0"/>
-    <define name="LUM_MAX" value="115"/>
+    <define name="LUM_MAX" value="145"/>
     <define name="CB_MIN" value="0"/>
-    <define name="CB_MAX" value="120"/>
+    <define name="CB_MAX" value="125"/>
     <define name="CR_MIN" value="0"/>
-    <define name="CR_MAX" value="130"/>
+    <define name="CR_MAX" value="133"/>
   </section>
 
   <section name="AIR_DATA" prefix="AIR_DATA_">

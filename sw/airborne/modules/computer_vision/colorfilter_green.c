@@ -52,12 +52,12 @@ uint8_t color_cr_min  = 0;//180;
 uint8_t color_cr_max  = 130;//255;
 uint8_t v_sectors               = 13; //
 uint8_t h_sectors               = 16;  // 
-uint8_t sector_end              = 6;  //
+uint8_t sector_end              = 7;  //
 uint16_t binary_threshold       = 130;
 uint16_t sector_height, sector_width;
 uint8_t center;
 uint8_t margin;
-uint8_t win = 7; // Should be an uneven number <= to v_sectors
+uint8_t win = 9; // Should be an uneven number <= to v_sectors
 
 // Result
 int heading_increment = 0;
@@ -113,7 +113,7 @@ struct image_t *colorfilter_func(struct image_t *img)
 
   heading_increment = heading(sector_averages);
 
-  printf("heading_increment: %d\n",heading_increment);
+  //printf("heading_increment: %d\n",heading_increment);
 
   if (COLORFILTER_SEND_OBSTACLE) {
     if (color_count > 20)
@@ -215,8 +215,8 @@ uint8_t largestColumn(uint8_t **input_array) {
 int8_t heading(uint8_t **input_array) {
   if (largestColumn(input_array) > v_sectors/2)
     // right
-    return -10;
+    return -4;
   else //(largestColumn(input_array) < v_sectors/2)
     //left 
-    return 10; 
+    return 4; 
 }
