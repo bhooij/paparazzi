@@ -34,7 +34,7 @@ extern void colorfilter_init(void);
 extern void CalculateSectorAverages (struct image_t *input_img,uint16_t x_end, uint8_t sector_h, uint8_t sector_w, uint8_t **output_array);
 extern bool safeToGoForwards(uint8_t **input_array);
 extern uint8_t freeColumn(uint8_t **input_array, int idx);
-extern uint8_t heading(uint8_t **input_array);
+extern int8_t heading(uint8_t **input_array);
 extern uint8_t largestColumn(uint8_t **input_array);
 
 //extern bool freeColumn(int *input_array, int idx);

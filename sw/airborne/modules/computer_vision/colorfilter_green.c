@@ -57,7 +57,7 @@ uint16_t binary_threshold       = 130;
 uint16_t sector_height, sector_width;
 uint8_t center;
 uint8_t margin;
-uint8_t win = 9; // Should be an uneven number <= to v_sectors
+uint8_t win = 7; // Should be an uneven number <= to v_sectors
 
 // Result
 int heading_increment = 0;
@@ -171,7 +171,7 @@ bool safeToGoForwards(uint8_t **input_array)
     count += freeColumn(input_array, i);
   }
   //cout << "count: " << count << endl;
-  if (count < win-2)
+  if (count < win)
     return false;
   else
     return true;
@@ -186,9 +186,9 @@ uint8_t freeColumn(uint8_t **input_array, int idx) {
   }
   // check if column is free
   if (count == sector_end)
-    return 1;
+    return true;
   else
-    return 0;
+    return false;
 }
 
 // check for largest free space: left of right
@@ -212,7 +212,7 @@ uint8_t largestColumn(uint8_t **input_array) {
 }
 
 // decide to turn left of right or do nothing
-uint8_t heading(uint8_t **input_array) {
+int8_t heading(uint8_t **input_array) {
   if (largestColumn(input_array) > v_sectors/2)
     // right
     return -10;
