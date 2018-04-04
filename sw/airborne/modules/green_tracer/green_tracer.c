@@ -60,7 +60,7 @@ int tresholdColorCount          = 0.20 * 124800; // 520 x 240 = 124.800 total pi
 float incrementForAvoidance;
 float trajectoryConfidence   = 3.0;
 float maxDistance               = 1.0;//2.25;
-uint8_t new_heading;
+int8_t new_heading;
 
 /*
  * Initialisation function, setting the colour filter, random seed and incrementForAvoidance
@@ -93,10 +93,13 @@ void green_tracer_periodic()
     moveWaypointForward(WP_TRAJECTORY, 1.2 * moveDistance);
     nav_set_heading_towards_waypoint(WP_GOAL);
     new_heading = heading_increment;
+    printf("safe control heading change: %d\n",new_heading);
     //chooseRandomIncrementAvoidance();
     trajectoryConfidence += 1;
   } else {
-    printf("Not safe!");
+    new_heading = heading_increment;
+    printf("Not safe!\n");
+    printf("not safe control heading change: %d\n",new_heading);
     waypoint_set_here_2d(WP_GOAL);
     waypoint_set_here_2d(WP_TRAJECTORY);
     increase_nav_heading(&nav_heading, new_heading);

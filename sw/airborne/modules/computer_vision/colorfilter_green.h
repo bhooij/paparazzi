@@ -35,7 +35,7 @@ extern void CalculateSectorAverages (struct image_t *input_img,uint16_t x_end, u
 extern bool safeToGoForwards(uint8_t **input_array);
 extern uint8_t freeColumn(uint8_t **input_array, int idx);
 extern int8_t heading(uint8_t **input_array);
-extern uint8_t largestColumn(uint8_t **input_array);
+extern uint16_t largestColumn(uint8_t **input_array);
 
 //extern bool freeColumn(int *input_array, int idx);
 

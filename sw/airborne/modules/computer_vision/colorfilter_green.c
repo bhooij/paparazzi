@@ -57,7 +57,7 @@ uint16_t binary_threshold       = 130;
 uint16_t sector_height, sector_width;
 uint8_t center;
 uint8_t margin;
-uint8_t win = 9; // Should be an uneven number <= to v_sectors
+uint8_t win = 5; // Should be an uneven number <= to v_sectors
 uint8_t colorRecGreen[4] = {90,80,70,80};
 uint8_t colorRecRed[4] = {200,30,150,20};
 
@@ -224,9 +224,9 @@ uint8_t freeColumn(uint8_t **input_array, int idx) {
 }
 
 // check for largest free space: left of right
-uint8_t largestColumn(uint8_t **input_array) {
+uint16_t largestColumn(uint8_t **input_array) {
   int count = 0;
-  int idx = 0; 
+  int idx = (v_sectors+1)/2; 
   int maxCount = 0; 
   for (int i = 0; i < v_sectors; i++) {
     //cout << "i: " << i << " | ";
