@@ -58,6 +58,10 @@ uint16_t sector_height, sector_width;
 uint8_t center;
 uint8_t margin;
 uint8_t win = 9; // Should be an uneven number <= to v_sectors
+uint8_t colorRecGreen[4] = {90,80,70,80};
+uint8_t colorRecRed[4] = {200,30,150,20};
+
+
 
 // Result
 int heading_increment = 0;
@@ -106,7 +110,35 @@ struct image_t *colorfilter_func(struct image_t *img)
 
   safetogo = safeToGoForwards(sector_averages);
 
-/*
+
+///////////////////////////////////////////////////////////////////////////////
+
+// # show green/red rectangles for the ROI frames
+//   for k in range(M-R,M): iterate through rows
+//     for l in range(N):   columns through columns
+//       x = l*win_b
+//       y = k*win_h
+//       #if meanROI[k-M+R,l] > 150:
+//       if green[k-M+R,l] == 1:
+//         cv2.rectangle(res, (x, y), (x+win_b-3, y+win_h-3), (0, 255, 0), 2)
+//       else:
+//         cv2.rectangle(res, (x, y), (x+win_b-3, y+win_h-3), (0, 0, 255), 2)
+
+
+  for (int i = 0; i < sector_end; i++)
+    for(int j = 0; j < v_sectors; j++)
+      if (sector_averages[j][i] == 1)
+        image_draw_rectangle(img, i*sector_width, (i+1)*sector_width, j*sector_height, (j+1)*sector_height, colorRecGreen);
+      else 
+        image_draw_rectangle(img, i*sector_width, (i+1)*sector_width, j*sector_height, (j+1)*sector_height, colorRecRed);
+
+  //image_draw_rectangle(img, 1+1*sector_height, 1+(1+1)*sector_height, 1+1*sector_width, 1+(1+1)*sector_width, colorRec);
+  //image_draw_rectangle(img, 1+2*sector_height, 1+(2+1)*sector_height, 1+2*sector_width, 1+(2+1)*sector_width, colorRec);
+
+///////////////////////////////////////////////////////////////////////////////
+
+
+/* 
   printf("safetogo: %d\n",safetogo);
   printf("\n");
 */
@@ -170,7 +202,7 @@ bool safeToGoForwards(uint8_t **input_array)
   for (int i = center - margin; i < center + margin + 1; i++) {
     count += freeColumn(input_array, i);
   }
-  //cout << "count: " << count << endl;
+  // check if column matches window size
   if (count < win)
     return false;
   else
@@ -208,15 +240,20 @@ uint8_t largestColumn(uint8_t **input_array) {
     else
       count += 1; 
   }
+  printf(" idx : %d ",idx);
   return idx;   
 }
 
 // decide to turn left of right or do nothing
 int8_t heading(uint8_t **input_array) {
-  if (largestColumn(input_array) > v_sectors/2)
+  if (largestColumn(input_array) > v_sectors/2) {
+    // left
+    return 4;
+    printf("heading: RIGHT ");
+  }
+  else {//(largestColumn(input_array) < v_sectors/2) {
     // right
-    return -4;
-  else //(largestColumn(input_array) < v_sectors/2)
-    //left 
-    return 4; 
+    printf("heading: LEFT ");
+    return -4; 
+  }
 }
