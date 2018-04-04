@@ -61,6 +61,8 @@ float incrementForAvoidance;
 float trajectoryConfidence   = 3.0;
 float maxDistance               = 1.0;//2.25;
 int8_t new_heading;
+float small_heading;
+uint8_t waiting = 0;
 
 /*
  * Initialisation function, setting the colour filter, random seed and incrementForAvoidance
@@ -89,20 +91,35 @@ void green_tracer_periodic()
   //VERBOSE_PRINT("Color_count: %d  threshold: %d safe: %d \n", color_count, tresholdColorCount, safeToGoForwards);
   float moveDistance = fmin(maxDistance, 0.05 * trajectoryConfidence);
   if (safe) {
+
     moveWaypointForward(WP_GOAL, moveDistance);
     moveWaypointForward(WP_TRAJECTORY, 1.2 * moveDistance);
     nav_set_heading_towards_waypoint(WP_GOAL);
     new_heading = heading_increment;
-    printf("safe control heading change: %d\n",new_heading);
+    
     //chooseRandomIncrementAvoidance();
-    trajectoryConfidence += 1;
-  } else {
+
+    small_heading = new_heading/8;
+    increase_nav_heading(&nav_heading, small_heading);
+    waiting = 0;
+    trajectoryConfidence += 3;
+
+    printf("small safe control heading change: %f\n", small_heading);
+  } 
+  else {
+    ++waiting;
     new_heading = heading_increment;
     printf("Not safe!\n");
     printf("not safe control heading change: %d\n",new_heading);
     waypoint_set_here_2d(WP_GOAL);
     waypoint_set_here_2d(WP_TRAJECTORY);
-    increase_nav_heading(&nav_heading, new_heading);
+
+      if(waiting > 18){
+        increase_nav_heading(&nav_heading, 45);
+      }
+      else {
+        increase_nav_heading(&nav_heading, new_heading);
+      }
     if (trajectoryConfidence > 5) {
       trajectoryConfidence = 1;
     } else {

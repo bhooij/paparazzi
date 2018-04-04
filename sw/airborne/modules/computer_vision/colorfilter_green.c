@@ -52,12 +52,12 @@ uint8_t color_cr_min  = 0;//180;
 uint8_t color_cr_max  = 130;//255;
 uint8_t v_sectors               = 13; //
 uint8_t h_sectors               = 16;  // 
-uint8_t sector_end              = 7;  //
-uint16_t binary_threshold       = 130;
+uint8_t sector_end              = 5;  //
+uint16_t binary_threshold       = 140;
 uint16_t sector_height, sector_width;
 uint8_t center;
 uint8_t margin;
-uint8_t win = 5; // Should be an uneven number <= to v_sectors
+uint8_t win = 7; // Should be an uneven number <= to v_sectors
 uint8_t colorRecGreen[4] = {90,80,70,80};
 uint8_t colorRecRed[4] = {200,30,150,20};
 
@@ -226,11 +226,11 @@ uint8_t freeColumn(uint8_t **input_array, int idx) {
 // check for largest free space: left of right
 uint16_t largestColumn(uint8_t **input_array) {
   int count = 0;
-  int idx = (v_sectors+1)/2; 
+  uint16_t idx = 0; 
   int maxCount = 0; 
   for (int i = 0; i < v_sectors; i++) {
     //cout << "i: " << i << " | ";
-    if (freeColumn(input_array, i) == 0) { 
+    if (freeColumn(input_array, i) == 0) { // freeColumn(input_array, i) input_array[i][0]
       if (count > maxCount) {
         maxCount = count; 
         idx = i - maxCount/2 - maxCount % 2;  
@@ -239,6 +239,10 @@ uint16_t largestColumn(uint8_t **input_array) {
     }
     else
       count += 1; 
+      if(count > maxCount) {
+        maxCount = count;
+        idx = i - maxCount/2 - maxCount % 2;
+      }
   }
   printf(" idx : %d ",idx);
   return idx;   
@@ -246,14 +250,17 @@ uint16_t largestColumn(uint8_t **input_array) {
 
 // decide to turn left of right or do nothing
 int8_t heading(uint8_t **input_array) {
-  if (largestColumn(input_array) > v_sectors/2) {
+  if (largestColumn(input_array) > v_sectors/2+1) {
     // left
-    return 4;
+    return 8;
     printf("heading: RIGHT ");
+  }
+  else if (largestColumn(input_array) == v_sectors/2+1) {
+    return 0;
   }
   else {//(largestColumn(input_array) < v_sectors/2) {
     // right
     printf("heading: LEFT ");
-    return -4; 
+    return -8; 
   }
 }

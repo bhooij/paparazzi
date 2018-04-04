@@ -105,11 +105,11 @@
   <!-- Cyberzoo bebop1 values -->
   <section name="COLORFILTER" prefix="GREEN_TRACER_">
     <define name="LUM_MIN" value="0"/>
-    <define name="LUM_MAX" value="130"/>
+    <define name="LUM_MAX" value="130"/> <!-- 130 -->
     <define name="CB_MIN" value="0"/>
-    <define name="CB_MAX" value="132"/>
+    <define name="CB_MAX" value="126"/> <!-- 132 --> <!-- 126 -->
     <define name="CR_MIN" value="0"/>
-    <define name="CR_MAX" value="131"/>
+    <define name="CR_MAX" value="126"/> <!-- 131 --> <!-- 126 -->
   </section>
 
   <section name="AIR_DATA" prefix="AIR_DATA_">
@@ -259,7 +259,7 @@
     <define name="MILLIAMP_AT_FULL_THROTTLE" value="8700"/>
     <define name="CATASTROPHIC_BAT_LEVEL" value="9.9" unit="V"/>
     <define name="CRITIC_BAT_LEVEL" value="10.8" unit="V"/>
-    <define name="LOW_BAT_LEVEL" value="11.1" unit="V"/>
+    <define name="LOW_BAT_LEVEL" value="10.8" unit="V"/>
     <define name="MAX_BAT_LEVEL" value="12.4" unit="V"/>
   </section>
 </airframe>
