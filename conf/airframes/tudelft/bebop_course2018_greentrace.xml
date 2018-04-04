@@ -105,11 +105,11 @@
   <!-- Cyberzoo bebop1 values -->
   <section name="COLORFILTER" prefix="GREEN_TRACER_">
     <define name="LUM_MIN" value="0"/>
-    <define name="LUM_MAX" value="145"/>
+    <define name="LUM_MAX" value="130"/>
     <define name="CB_MIN" value="0"/>
-    <define name="CB_MAX" value="125"/>
+    <define name="CB_MAX" value="132"/>
     <define name="CR_MIN" value="0"/>
-    <define name="CR_MAX" value="133"/>
+    <define name="CR_MAX" value="131"/>
   </section>
 
   <section name="AIR_DATA" prefix="AIR_DATA_">
