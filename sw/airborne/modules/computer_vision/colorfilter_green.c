@@ -223,39 +223,61 @@ uint8_t freeColumn(uint8_t **input_array, int idx) {
     return false;
 }
 
+// // check for largest free space: left of right
+// uint16_t largestColumn(uint8_t **input_array) {
+//   int count = 0;
+//   uint16_t idx = 0; 
+//   int maxCount = 0; 
+//   for (int i = 0; i < v_sectors; i++) {
+//     //cout << "i: " << i << " | ";
+//     if (freeColumn(input_array, i) == 0) { // freeColumn(input_array, i) input_array[i][0]
+//       if (count > maxCount) {
+//         maxCount = count; 
+//         idx = i - maxCount/2 - maxCount % 2;  
+//       }
+//       count = 0; 
+//     }
+//     else
+//       count += 1; 
+//       if(count > maxCount) {
+//         maxCount = count;
+//         idx = i - maxCount/2 - maxCount % 2;
+//       }
+//   }
+//   printf(" idx : %d ",idx);
+//   return idx;   
+// }
+
 // check for largest free space: left of right
 uint16_t largestColumn(uint8_t **input_array) {
   int count = 0;
-  uint16_t idx = 0; 
+  int16_t idx = h_sectors/2; 
   int maxCount = 0; 
   for (int i = 0; i < v_sectors; i++) {
     //cout << "i: " << i << " | ";
-    if (freeColumn(input_array, i) == 0) { // freeColumn(input_array, i) input_array[i][0]
-      if (count > maxCount) {
-        maxCount = count; 
-        idx = i - maxCount/2 - maxCount % 2;  
-      }
-      count = 0; 
-    }
-    else
-      count += 1; 
-      if(count > maxCount) {
-        maxCount = count;
-        idx = i - maxCount/2 - maxCount % 2;
-      }
-  }
-  printf(" idx : %d ",idx);
+        if (freeColumn(input_array, i) == 1) {
+          count += 1;
+          if (count > maxCount) {
+            maxCount = count;
+            idx = i + 1 - maxCount/2 - maxCount % 2;
+          }
+        }
+        else
+          count = 0; 
+    }  
   return idx;   
 }
 
+
+
 // decide to turn left of right or do nothing
 int8_t heading(uint8_t **input_array) {
-  if (largestColumn(input_array) > v_sectors/2+1) {
+  if (largestColumn(input_array) > v_sectors/2) {
     // left
-    return 8;
     printf("heading: RIGHT ");
+    return 8;
   }
-  else if (largestColumn(input_array) == v_sectors/2+1) {
+  else if (largestColumn(input_array) == v_sectors/2) {
     return 0;
   }
   else {//(largestColumn(input_array) < v_sectors/2) {
