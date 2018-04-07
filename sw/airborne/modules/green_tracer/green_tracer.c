@@ -56,10 +56,8 @@
 
 
 uint8_t safe; 
-int tresholdColorCount          = 0.20 * 124800; // 520 x 240 = 124.800 total pixels
-float incrementForAvoidance;
-float trajectoryConfidence   = 3.0;
-float maxDistance               = 1.0;//2.25;
+float trajectoryConfidence    = 3.0;
+float maxDistance             = 1.0;//2.25;
 int8_t new_heading;
 float small_heading;
 uint8_t waiting = 0;
@@ -88,29 +86,23 @@ void green_tracer_init()
 void green_tracer_periodic()
 {
   safe = safetogo;
-  //VERBOSE_PRINT("Color_count: %d  threshold: %d safe: %d \n", color_count, tresholdColorCount, safeToGoForwards);
   float moveDistance = fmin(maxDistance, 0.05 * trajectoryConfidence);
-  if (safe) {
 
+  if (safe) {
     moveWaypointForward(WP_GOAL, moveDistance);
     moveWaypointForward(WP_TRAJECTORY, 1.2 * moveDistance);
     nav_set_heading_towards_waypoint(WP_GOAL);
     new_heading = heading_increment;
-    
-    //chooseRandomIncrementAvoidance();
 
     small_heading = new_heading/8;
     increase_nav_heading(&nav_heading, small_heading);
     waiting = 0;
     trajectoryConfidence += 3;
-
-    printf("small safe control heading change: %f\n", small_heading);
   } 
+
   else {
     ++waiting;
     new_heading = heading_increment;
-    printf("Not safe!\n");
-    printf("not safe control heading change: %d\n",new_heading);
     waypoint_set_here_2d(WP_GOAL);
     waypoint_set_here_2d(WP_TRAJECTORY);
 
@@ -120,6 +112,7 @@ void green_tracer_periodic()
       else {
         increase_nav_heading(&nav_heading, new_heading);
       }
+
     if (trajectoryConfidence > 5) {
       trajectoryConfidence = 1;
     } else {
@@ -181,22 +174,5 @@ uint8_t moveWaypointForward(uint8_t waypoint, float distanceMeters)
   struct EnuCoor_i new_coor;
   calculateForwards(&new_coor, distanceMeters);
   moveWaypoint(waypoint, &new_coor);
-  return false;
-}
-
-/*
- * Sets the variable 'incrementForAvoidance' randomly positive/negative
- */
-uint8_t chooseRandomIncrementAvoidance()
-{
-  // Randomly choose CW or CCW avoiding direction
-  int r = rand() % 2;
-  if (r == 0) {
-    incrementForAvoidance = 10;
-    VERBOSE_PRINT("Set avoidance increment to: %f\n", incrementForAvoidance);
-  } else {
-    incrementForAvoidance = -10;
-    VERBOSE_PRINT("Set avoidance increment to: %f\n", incrementForAvoidance);
-  }
   return false;
 }

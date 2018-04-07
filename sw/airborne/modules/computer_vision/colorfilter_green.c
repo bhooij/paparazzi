@@ -44,108 +44,84 @@ PRINT_CONFIG_VAR(COLORFILTER_SEND_OBSTACLE)
 struct video_listener *listener = NULL;
 
 // Filter Settings
-uint8_t color_lum_min = 0;//105;
-uint8_t color_lum_max = 115;//205;
-uint8_t color_cb_min  = 0;//52;
-uint8_t color_cb_max  = 120;//140;
-uint8_t color_cr_min  = 0;//180;
-uint8_t color_cr_max  = 130;//255;
-uint8_t v_sectors               = 13; //
-uint8_t h_sectors               = 16;  // 
-uint8_t sector_end              = 5;  //
-uint16_t binary_threshold       = 140;
-uint16_t sector_height, sector_width;
-uint8_t center;
-uint8_t margin;
-uint8_t win = 7; // Should be an uneven number <= to v_sectors
-uint8_t colorRecGreen[4] = {90,80,70,80};
-uint8_t colorRecRed[4] = {200,30,150,20};
+uint8_t color_lum_min       = 0;
+uint8_t color_lum_max       = 130;
+uint8_t color_cb_min        = 0;
+uint8_t color_cb_max        = 132;
+uint8_t color_cr_min        = 0;
+uint8_t color_cr_max        = 131;
 
+/*
+These variables are used to determine the window size for the sector CalculateSectorAverages function
+and to determine the control window size which is used by the safeToGoForwards function.
+*/
+uint8_t h_sectors           = 13;               // Should be an uneven number such that img->h/h_sectors is an integer.
+uint8_t v_sectors           = 16;               // Should be an number such that img->w/v_sectors  is an interger.
+uint8_t sector_end          = 5;                // This variable states how many colums the sector_averages array has.
+uint16_t binary_threshold   = 140;              // If the average Y value of one of the sector_averages sectors is lower than this value, the sector is considered not safe.
+uint8_t win                 = 7;                // Should be an uneven number <= h_sectors.
+uint16_t sector_height;                         // The height of one sector.
+uint16_t sector_width;                          // The width of one sector.
+uint16_t y_end;
 
+uint8_t colorRecGreen[4]    = {90,80,70,80};
+uint8_t colorRecRed[4]      = {200,30,150,20};
 
 // Result
-int heading_increment = 0;
-int color_count = 0;
-int safetogo = 0;
+int heading_increment       = 0;                 // initialisatio  of the resulting heading increment determined from the heading function. This will be used for the attitude control.
+int safetogo                = 0;                 // initialisation of the resulting value of the SafeToGoForwards funtion.
 
 #include "subsystems/abi.h"
-
-
 
 // Function
 struct image_t *colorfilter_func(struct image_t *img);
 struct image_t *colorfilter_func(struct image_t *img)
 {
-  uint16_t x_end;
-  
-  uint8_t *sector_averages[v_sectors];
-  for (int i = 0; i < (v_sectors); i++)
+  // initialisation of one column of the sector_averages array.
+  uint8_t *sector_averages[h_sectors];
+
+  // Determination of the dimensions of the sectors in the control window.
+  sector_height = img->w/v_sectors;
+  sector_width = img->h/h_sectors;
+
+  // Determination of the column where the CalculateSectorAverages should stop.
+  y_end = sector_height*sector_end;
+
+  // Here the memory for the full sector_averages array is allocated.
+  for (int i = 0; i < (h_sectors); i++)
   {
   	sector_averages[i] = (uint8_t *)malloc((sector_end) * sizeof(uint8_t));
   }
 
-  // Determine the color count of the green pixels and change the image to black and white.
-  // location of function: image.c line 151.
-  color_count = image_yuv422_colorfilt(img, img,
-                                       color_lum_min, color_lum_max,
-                                       color_cb_min, color_cb_max,
-                                       color_cr_min, color_cr_max
-                                      );
+  //Change the image to black and white. The pixels which are considered green become white and the rest becomes black.
+  image_yuv422_colorfilt(img, img, color_lum_min, color_lum_max, color_cb_min, color_cb_max, color_cr_min, color_cr_max);
 
-  sector_height = img->h/v_sectors;
-  sector_width = img->w/h_sectors;
-  x_end = sector_width*sector_end;
+  //Fill the sector_averages array with ones and zeros. A one is given when the average Y values is higher than binary threshold othwise it gives a zero.
+  CalculateSectorAverages(img, y_end, sector_width, sector_height, sector_averages);
 
-
-  CalculateSectorAverages(img, x_end, sector_height, sector_width, sector_averages);
 /*
-  for(int l = 0; l < v_sectors; ++l) {
-    for(int k = 0; k < sector_end; ++k) {
-      printf("%d",sector_averages[l][k]); printf(" ");
+  for(int l = 0; l < h_sectors; ++l){
+    for(int k = 0; k < sector_end; ++k){
+      printf("%d ", sector_averages[l][k]);
     }
     printf("\n");
   }
-  printf("\n");
 */
-
+  //This function uses the sector_averages array to determine whether it is safe to go forward.
   safetogo = safeToGoForwards(sector_averages);
 
-
-///////////////////////////////////////////////////////////////////////////////
-
-// # show green/red rectangles for the ROI frames
-//   for k in range(M-R,M): iterate through rows
-//     for l in range(N):   columns through columns
-//       x = l*win_b
-//       y = k*win_h
-//       #if meanROI[k-M+R,l] > 150:
-//       if green[k-M+R,l] == 1:
-//         cv2.rectangle(res, (x, y), (x+win_b-3, y+win_h-3), (0, 255, 0), 2)
-//       else:
-//         cv2.rectangle(res, (x, y), (x+win_b-3, y+win_h-3), (0, 0, 255), 2)
-
-
+  /*This part draws rectangles on the image. A green rectangle is drawn when the value of the corresponding 
+   *element in sector_averages is 1 otherwise the rectangle becomes red.
+   */
   for (int i = 0; i < sector_end; i++)
-    for(int j = 0; j < v_sectors; j++)
+    for(int j = 0; j < h_sectors; j++)
       if (sector_averages[j][i] == 1)
-        image_draw_rectangle(img, i*sector_width, (i+1)*sector_width, j*sector_height, (j+1)*sector_height, colorRecGreen);
+        image_draw_rectangle(img, i*sector_height, (i+1)*sector_height, j*sector_width, (j+1)*sector_width, colorRecGreen);
       else 
-        image_draw_rectangle(img, i*sector_width, (i+1)*sector_width, j*sector_height, (j+1)*sector_height, colorRecRed);
+        image_draw_rectangle(img, i*sector_height, (i+1)*sector_height, j*sector_width, (j+1)*sector_width, colorRecRed);
 
-  //image_draw_rectangle(img, 1+1*sector_height, 1+(1+1)*sector_height, 1+1*sector_width, 1+(1+1)*sector_width, colorRec);
-  //image_draw_rectangle(img, 1+2*sector_height, 1+(2+1)*sector_height, 1+2*sector_width, 1+(2+1)*sector_width, colorRec);
-
-///////////////////////////////////////////////////////////////////////////////
-
-
-/* 
-  printf("safetogo: %d\n",safetogo);
-  printf("\n");
-*/
-
+  // here the heading increment is determined.
   heading_increment = heading(sector_averages);
-
-  //printf("heading_increment: %d\n",heading_increment);
 
   if (COLORFILTER_SEND_OBSTACLE) {
     if (color_count > 20)
@@ -157,6 +133,7 @@ struct image_t *colorfilter_func(struct image_t *img)
       AbiSendMsgOBSTACLE_DETECTION(OBS_DETECTION_COLOR_ID, 10.f, 0.f, 0.f);
     }
   }
+
   return img; // Colorfilter did not make a new image, but it changed the input image.
 }
 
@@ -165,124 +142,141 @@ void colorfilter_init(void)
   listener = cv_add_to_device(&COLORFILTER_CAMERA, colorfilter_func, COLORFILTER_FPS);
 }
 
-void CalculateSectorAverages (struct image_t *input_img, uint16_t x_end, uint8_t sector_h, uint8_t sector_w, uint8_t **output_array) {
+/*
+ * This function detemines wheter an element of the sector averages array should be a zero or a one.
+ * the average Y value of a sector (sector_h*sector_w) is calculated and the function immediately checks
+ * if the average is larger than binary_threshold. If it is higher output_array[(x+1)/sector_w-1][s] becomes 1
+ * otherwise it becomes 0.
+ *
+ * The image is a very long list of UYVY values. Only the Y values are used for the calculation. The function
+ * scans over each row of a sector and sums up all the Y values. Skipping to the next row is done by continueing
+ * the summation x*input_img->w*2 elements further. This is done until img->h skips are done. Once this value is
+ * x is set back to -1 and s will be increased by 1. Then summation starts again from the top of the image, but 
+ * now s*sector_h*2 further.
+ */
+void CalculateSectorAverages (struct image_t *input_img, uint16_t y_end, uint8_t sector_w, uint8_t sector_h, uint8_t **output_array) {
+
   uint8_t *source = (uint8_t *)input_img->buf;
   int sum = 0;
   int s = 0;
 
-  for(int y = 0; y < input_img->h; ++y){
-    for(int x = s*sector_w*2; x <x_end*2; x+=2) {
-      sum += source[y*input_img->w*2+x+1];
-      if(x+2 == (s+1)*sector_w*2) {
+  for(int x = 0; x < input_img->h; ++x){
+    for(int y = s*sector_h*2; y <y_end*2; y+=2) {
+      sum += source[x*input_img->w*2+y+1];
+      if(y+2 == (s+1)*sector_h*2) {
         break;
       }
     }
-    if((y+1)%sector_h == 0) {
-      if (sum/(sector_h*sector_w) > binary_threshold) {
-        output_array[(y+1)/sector_h-1][s] = 1;
+    if((x+1)%sector_w == 0) {
+      if (sum/(sector_w*sector_h) > binary_threshold) {
+        output_array[(x+1)/sector_w-1][s] = 1;
       }
       else {
-        output_array[(y+1)/sector_h-1][s] = 0;
+        output_array[(x+1)/sector_w-1][s] = 0;
       }
       sum = 0;
     }
-    if(y == input_img->h-1 && s < (x_end/sector_w) - 1) {
-      y = -1;
+    if(x == input_img->h-1 && s < (y_end/sector_h) - 1) {
+      x = -1;
       ++s;
     }
   }
 }
 
+/*
+ * The SafeToGoForwards function uses the sector_averages array and the values of win and h_sectors to determine
+ * which elements of the array should be used. The used elements of this function form the control window in which
+ * is determined whether it is safe to continue the trajectory.
+ *
+ * This function again uses the freeColumn function which, as the name already implies, determines wheter a column
+ * is free. If a column is free count is increased by 1. At the end of the loop is chacked if count < win and when
+ * this is the case it is not safe to go forward anymore are false is returned.
+ */
 bool safeToGoForwards(uint8_t **input_array) 
 {
-  center = (v_sectors+1)/2; 
-  margin  = (win-1)/2; 
+ 
   int count = 0; 
 
-  for (int i = center - margin; i < center + margin + 1; i++) {
+  for (int i = (h_sectors)/2 - (win-1)/2; i < (h_sectors)/2 + (win-1)/2 + 1; i++) {
     count += freeColumn(input_array, i);
   }
-  // check if column matches window size
   if (count < win)
     return false;
   else
     return true;
 }
 
-// check if column is free (green) for array[r][c]
+/*
+ * The heading function returns the direction (+ or -) and a given heading increment after the largestColumn function
+ * has determined on which side of the screen (left or right) the largest group of free columns is located. If the output
+ * of the largestColumn function is h_sectors/2 it means that the correct direction is straight ahead and the heading will
+ * not be changed.
+ */
+int8_t heading(uint8_t **input_array) {
+
+  if (largestColumn(input_array) > 0) { //h_sectors/2
+    // right
+    printf("Go right!\n");
+    return 8; 
+  }
+  else if (largestColumn(input_array) == 0) { //h_sectors/2
+    printf("Go straight!\n");
+    return 0;
+  }
+  else {
+    // left
+    printf("Go left!\n");
+    return -8; 
+  }
+}
+
+/*
+ * The freeColumn function also uses sector_averages as input, but also an index value of a certain column (idx). It then loops
+ * over the column (from 0 to sector_end) and when all elements of the column are 1 a true boolean is returned otherwise it returns false.
+ */
 uint8_t freeColumn(uint8_t **input_array, int idx) {
+
   uint8_t count = 0;
 
   for (int i = 0; i < sector_end; i++){
     count += input_array[idx][i];
   }
-  // check if column is free
   if (count == sector_end)
     return true;
   else
     return false;
 }
 
-// // check for largest free space: left of right
-// uint16_t largestColumn(uint8_t **input_array) {
-//   int count = 0;
-//   uint16_t idx = 0; 
-//   int maxCount = 0; 
-//   for (int i = 0; i < v_sectors; i++) {
-//     //cout << "i: " << i << " | ";
-//     if (freeColumn(input_array, i) == 0) { // freeColumn(input_array, i) input_array[i][0]
-//       if (count > maxCount) {
-//         maxCount = count; 
-//         idx = i - maxCount/2 - maxCount % 2;  
-//       }
-//       count = 0; 
-//     }
-//     else
-//       count += 1; 
-//       if(count > maxCount) {
-//         maxCount = count;
-//         idx = i - maxCount/2 - maxCount % 2;
-//       }
-//   }
-//   printf(" idx : %d ",idx);
-//   return idx;   
-// }
+/*
+ * The largestColumn function determines the index of the column which is in the center of the largest group of free columns.
+ */
+int16_t largestColumn(uint8_t **input_array) {
 
-// check for largest free space: left of right
-uint16_t largestColumn(uint8_t **input_array) {
   int count = 0;
-  int16_t idx = h_sectors/2; 
-  int maxCount = 0; 
-  for (int i = 0; i < v_sectors; i++) {
-    //cout << "i: " << i << " | ";
+  int maxCount = 0;
+  int8_t CoG = 0; 
+
+  for (int i = 0; i < h_sectors; i++) {
         if (freeColumn(input_array, i) == 1) {
-          count += 1;
+            ++count;
           if (count > maxCount) {
             maxCount = count;
-            idx = i + 1 - maxCount/2 - maxCount % 2;
+            CoG += weight(i);
           }
         }
         else
-          count = 0; 
+         count = 0; 
     }  
-  return idx;   
+  return CoG; //idx;   
 }
 
+int8_t weight(int input){
+  if(input < h_sectors/2)
+    return -1;
 
+  else if(input > h_sectors/2)
+    return 1;
 
-// decide to turn left of right or do nothing
-int8_t heading(uint8_t **input_array) {
-  if (largestColumn(input_array) > v_sectors/2) {
-    // left
-    printf("heading: RIGHT ");
-    return 8;
-  }
-  else if (largestColumn(input_array) == v_sectors/2) {
+  else
     return 0;
-  }
-  else {//(largestColumn(input_array) < v_sectors/2) {
-    // right
-    printf("heading: LEFT ");
-    return -8; 
-  }
 }

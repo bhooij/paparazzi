@@ -148,10 +148,9 @@ void image_to_grayscale(struct image_t *input, struct image_t *output)
  * @param[in] v_M The V maximum value
  * @return The amount of filtered pixels
  */
-uint16_t image_yuv422_colorfilt(struct image_t *input, struct image_t *output, uint8_t y_m, uint8_t y_M, uint8_t u_m,
+void image_yuv422_colorfilt(struct image_t *input, struct image_t *output, uint8_t y_m, uint8_t y_M, uint8_t u_m,
                                 uint8_t u_M, uint8_t v_m, uint8_t v_M)
 {
-  uint16_t cnt = 0;
   uint8_t *source = (uint8_t *)input->buf;
   uint8_t *dest = (uint8_t *)output->buf;
 
@@ -170,35 +169,25 @@ uint16_t image_yuv422_colorfilt(struct image_t *input, struct image_t *output, u
         && (dest[2] >= v_m)
         && (dest[2] <= v_M)
       ) {
-        cnt ++;
         // UYVY
-        dest[0] =  127; //64;        // U
-        dest[1] =  255; //source[1];  // Y
-        dest[2] =  127; //255;        // V
-        dest[3] =  255; //source[3];  // Y
-        /*
-         * With the adaptation the pixels which are considered green will be displayed in white and the other pizels
-         * will become black.
-        */
-      } else {
+        dest[0] =  127; // U
+        dest[1] =  255; // Y
+        dest[2] =  127; // V
+        dest[3] =  255; // Y
+      }
+
+      else {
         // UYVY
-        //char u = source[0] - 127;
-        //u /= 4;
-        dest[0] = 127; //127;        // U
-        dest[1] = 0;  //source[1];  // Y
-        //u = source[2] - 127;
-        //u /= 4;
-        dest[2] = 127; //127;        // V
-        dest[3] = 0; //source[3];  // Y
+        dest[0] = 127; // U
+        dest[1] = 0;   // Y
+        dest[2] = 127; // V
+        dest[3] = 0;   // Y
       }
       // Go to the next 2 pixels
-      //printf("%d ' ' %d ' '",dest[1],dest[3]);
       dest += 4;
       source += 4;
     }
-    //printf("\n");
   }
-  return cnt;
 }
 
 /**

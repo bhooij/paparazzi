@@ -1,7 +1,7 @@
 <conf>
   <aircraft
    name="bebop_green_trace"
-   ac_id="3"
+   ac_id="2"
    airframe="airframes/tudelft/bebop_course2018_greentrace.xml"
    radio="radios/dummy.xml"
    telemetry="telemetry/default_rotorcraft.xml"
