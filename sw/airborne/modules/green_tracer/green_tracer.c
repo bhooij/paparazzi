@@ -74,10 +74,6 @@ void green_tracer_init()
   color_cb_max  = GREEN_TRACER_CB_MAX;
   color_cr_min  = GREEN_TRACER_CR_MIN;
   color_cr_max  = GREEN_TRACER_CR_MAX;
-
-  // Initialise random values
-  srand(time(NULL));
-  //chooseRandomIncrementAvoidance();
 }
 
 /*
@@ -89,13 +85,13 @@ void green_tracer_periodic()
   float moveDistance = fmin(maxDistance, 0.05 * trajectoryConfidence);
 
   if (safe) {
-    moveWaypointForward(WP_GOAL, moveDistance);
-    moveWaypointForward(WP_TRAJECTORY, 1.2 * moveDistance);
-    nav_set_heading_towards_waypoint(WP_GOAL);
     new_heading = heading_increment;
-
-    small_heading = new_heading/8;
+    small_heading = new_heading/8*3;
+    
+    moveWaypointForward(WP_GOAL, moveDistance);
+    nav_set_heading_towards_waypoint(WP_GOAL);
     increase_nav_heading(&nav_heading, small_heading);
+
     waiting = 0;
     trajectoryConfidence += 3;
   } 
@@ -104,7 +100,6 @@ void green_tracer_periodic()
     ++waiting;
     new_heading = heading_increment;
     waypoint_set_here_2d(WP_GOAL);
-    waypoint_set_here_2d(WP_TRAJECTORY);
 
       if(waiting > 18){
         increase_nav_heading(&nav_heading, 45);

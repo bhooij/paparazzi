@@ -200,8 +200,9 @@ bool safeToGoForwards(uint8_t **input_array)
   for (int i = (h_sectors)/2 - (win-1)/2; i < (h_sectors)/2 + (win-1)/2 + 1; i++) {
     count += freeColumn(input_array, i);
   }
-  if (count < win)
+  if (count < win) {
     return false;
+  }
   else
     return true;
 }
@@ -216,16 +217,13 @@ int8_t heading(uint8_t **input_array) {
 
   if (largestColumn(input_array) > 0) { //h_sectors/2
     // right
-    printf("Go right!\n");
     return 8; 
   }
   else if (largestColumn(input_array) == 0) { //h_sectors/2
-    printf("Go straight!\n");
     return 0;
   }
   else {
     // left
-    printf("Go left!\n");
     return -8; 
   }
 }

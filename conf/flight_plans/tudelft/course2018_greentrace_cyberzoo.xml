@@ -110,7 +110,7 @@
       <stay wp="GOAL"/>
 <!--       <exception cond="!InsideObstacleZone(WaypointX(WP_TRAJECTORY),WaypointY(WP_TRAJECTORY))" deroute="PrepareObstacleRun"/>  -->
     </block>
-    <block name="PrepareObstacleRun">
+   <!-- <block name="PrepareObstacleRun">
       <while cond="!InsideObstacleZone(WaypointX(WP_TRAJECTORY),WaypointY(WP_TRAJECTORY))">
         <call_once fun="increase_nav_heading(&nav_heading, 5)"/>
       </while>
@@ -121,7 +121,7 @@
         <go wp="GOAL"/>
       </while>
       <deroute block="START"/>
-    </block>
+    </block> -->
     <block key="l" name="Land here" strip_button="Land Here" strip_icon="land-right.png">
       <call_once fun="NavSetWaypointHere(WP_TD)"/>
       <go wp="TD"/>
