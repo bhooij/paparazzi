@@ -57,9 +57,10 @@ and to determine the control window size which is used by the safeToGoForwards f
 */
 uint8_t h_sectors           = 13;               // Should be an uneven number such that img->h/h_sectors is an integer.
 uint8_t v_sectors           = 16;               // Should be an number such that img->w/v_sectors  is an interger.
-uint8_t sector_end          = 5;                // This variable states how many colums the sector_averages array has.
+uint8_t sector_end          = 8;                // This variable states how many colums the sector_averages array has.
+uint8_t control_sector_end  = 5;
 uint16_t binary_threshold   = 140;              // If the average Y value of one of the sector_averages sectors is lower than this value, the sector is considered not safe.
-uint8_t win                 = 7;                // Should be an uneven number <= h_sectors.
+uint8_t win                 = 5;                // Should be an uneven number <= h_sectors.
 uint16_t sector_height;                         // The height of one sector.
 uint16_t sector_width;                          // The width of one sector.
 uint16_t y_end;
@@ -198,7 +199,7 @@ bool safeToGoForwards(uint8_t **input_array)
   int count = 0; 
 
   for (int i = (h_sectors)/2 - (win-1)/2; i < (h_sectors)/2 + (win-1)/2 + 1; i++) {
-    count += freeColumn(input_array, i);
+    count += freeColumn(input_array, i, control_sector_end);
   }
   if (count < win) {
     return false;
@@ -232,14 +233,14 @@ int8_t heading(uint8_t **input_array) {
  * The freeColumn function also uses sector_averages as input, but also an index value of a certain column (idx). It then loops
  * over the column (from 0 to sector_end) and when all elements of the column are 1 a true boolean is returned otherwise it returns false.
  */
-uint8_t freeColumn(uint8_t **input_array, int idx) {
+uint8_t freeColumn(uint8_t **input_array, int idx, int stop) {
 
   uint8_t count = 0;
 
-  for (int i = 0; i < sector_end; i++){
+  for (int i = 0; i < stop; i++){
     count += input_array[idx][i];
   }
-  if (count == sector_end)
+  if (count == stop)
     return true;
   else
     return false;
@@ -255,7 +256,7 @@ int16_t largestColumn(uint8_t **input_array) {
   int8_t CoG = 0; 
 
   for (int i = 0; i < h_sectors; i++) {
-        if (freeColumn(input_array, i) == 1) {
+        if (freeColumn(input_array, i, sector_end) == 1) {
             ++count;
           if (count > maxCount) {
             maxCount = count;
